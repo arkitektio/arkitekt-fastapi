@@ -87,7 +87,9 @@ def test_add_state_detail_routes_uses_current_agent_state_accessor() -> None:
 
     add_state_detail_routes(app, agent)
 
-    paths = {route.path for route in app.routes}
+    # From the schema rather than app.routes: fastapi 0.141 keeps an included
+    # router as one entry there, without a path of its own.
+    paths = set(app.openapi()["paths"])
     assert "/session_info" in paths
     assert "/states/checkout" in paths
 

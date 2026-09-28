@@ -101,5 +101,5 @@ def test_without_a_lifespan_the_caller_owns_the_agent(tmp_path) -> None:  # noqa
 
     assert agent.app_registry is snapshot and agent.bound_app is bound
     assert app.state.agent is agent
-    assert any(getattr(route, "path", "") == "/schemas/states" for route in app.routes), "routes added now"
+    assert "/schemas/states" in app.openapi()["paths"], "routes added now"
     assert app.router.lifespan_context is not None  # FastAPI's default, not ours
