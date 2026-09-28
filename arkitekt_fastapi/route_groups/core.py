@@ -4,11 +4,11 @@ from __future__ import annotations
 from typing import Any
 from collections.abc import Callable
 
-from fastapi import APIRouter, HTTPException, Request, WebSocket
+from fastapi import APIRouter, Request, WebSocket
 
 from arkitekt_fastapi.auth import (
-    AuthenticationError,
     ExpandUserFromRequest,
+    expand_http_user_or_401,
 )
 from arkitekt_runtime.messages import Cancel, Pause, Resume
 from arkitekt_runtime.types import (
@@ -46,12 +46,7 @@ def build_core_router(
         """Expand the user for an HTTP route, answering 401 on rejection."""
         if expand_user_from_request is None:
             return get_user_from_request(request)
-        try:
-            return expand_user_from_request(request)
-        except AuthenticationError as auth_error:
-            # No `WWW-Authenticate` header: it makes browsers pop their native
-            # credential dialog, which fights an application's own login page.
-            raise HTTPException(status_code=401, detail="Not authorized") from auth_error
+        return expand_http_user_or_401(expand_user_from_request, request)
 
     async def websocket_endpoint(websocket: WebSocket) -> None:
         """Serve the unified websocket endpoint for tasks, states, and locks."""
@@ -90,6 +85,7 @@ def build_core_router(
 
     async def cancel_action(request: Request) -> dict[str, str]:
         """Request cancellation of a running task."""
+        resolve_http_user(request)
         payload = await request.json()
         cancel_input = CancelInput(**payload)
         await agent.transport.asubmit(Cancel(task=cancel_input.task))
@@ -97,6 +93,7 @@ def build_core_router(
 
     async def pause_action(request: Request) -> dict[str, str]:
         """Request pausing of a running task."""
+        resolve_http_user(request)
         payload = await request.json()
         pause_input = PauseInput(**payload)
         await agent.transport.asubmit(Pause(task=pause_input.task))
@@ -104,6 +101,7 @@ def build_core_router(
 
     async def resume_action(request: Request) -> dict[str, str]:
         """Request resuming of a paused task."""
+        resolve_http_user(request)
         payload = await request.json()
         resume_input = ResumeInput(**payload)
         await agent.transport.asubmit(Resume(task=resume_input.task))
@@ -111,6 +109,7 @@ def build_core_router(
 
     async def step_action(request: Request) -> dict[str, str]:
         """Request a single step for a stepping-capable task."""
+        resolve_http_user(request)
         payload = await request.json()
         task = payload["task"]
         await agent.transport.asubmit(Resume(task=task, step=True))

@@ -401,7 +401,8 @@ class AgentTestClient(_EventAccessors):
         data = response.json()
         return AssignmentResult(
             status=data.get("status", "unknown"),
-            task_id=data.get("task", ""),
+            # The implementation route answers `task_id`, the assign routes `task`.
+            task_id=data.get("task_id" if use_implementation_route else "task", ""),
             response_data=data,
         )
 
@@ -771,7 +772,8 @@ class AsyncAgentTestClient(_EventAccessors):
         data = response.json()
         return AssignmentResult(
             status=data.get("status", "unknown"),
-            task_id=data.get("task", ""),
+            # The implementation route answers `task_id`, the assign routes `task`.
+            task_id=data.get("task_id" if use_implementation_route else "task", ""),
             response_data=data,
         )
 

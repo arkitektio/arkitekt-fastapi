@@ -27,7 +27,7 @@ surface it: HTTP answers `401`, the websocket closes with code `1008`.
 from typing import Any
 from collections.abc import Callable
 
-from fastapi import Request
+from fastapi import HTTPException, Request
 
 from arkitekt_fastapi.models import WebSocketSubscriptionInit
 
@@ -81,11 +81,24 @@ def resolve_expand_user_from_request(
     return default_expand_user_from_request
 
 
+def expand_http_user_or_401(
+    expand_user_from_request: ExpandUserFromRequest, request: Request
+) -> Any:  # noqa: ANN401
+    """Expand the user of an HTTP request, answering 401 when the hook rejects it."""
+    try:
+        return expand_user_from_request(request)
+    except AuthenticationError as auth_error:
+        # No `WWW-Authenticate` header: it makes browsers pop their native
+        # credential dialog, which fights an application's own login page.
+        raise HTTPException(status_code=401, detail="Not authorized") from auth_error
+
+
 __all__ = [
     "AuthenticationError",
     "ExpandUserFromRequest",
     "UserSource",
     "default_expand_user_from_request",
+    "expand_http_user_or_401",
     "resolve_expand_user_from_request",
     "wrap_legacy_get_user_from_request",
 ]

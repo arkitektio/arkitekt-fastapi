@@ -118,6 +118,60 @@ def test_http_401_carries_no_www_authenticate_header() -> None:
     assert "www-authenticate" not in {key.lower() for key in response.headers}
 
 
+@pytest.mark.parametrize("path", ["/cancel", "/pause", "/resume", "/step"])
+def test_task_control_routes_are_authenticated(path: str) -> None:
+    """Controlling someone's task needs the same credentials as starting one."""
+    client = TestClient(build_app(expand_user_from_request=expand_user))
+    response = client.post(path, json={"task": "some-task"})
+    assert response.status_code == 401
+
+
+def _implementation_app(**kwargs: Any) -> tuple[FastAPI, list[Any]]:
+    from fastapi import APIRouter
+
+    from arkitekt_fastapi.route_groups import add_implementation_route
+    from arkitekt_spec.declare.definition.define import prepare_definition
+    from arkitekt_spec.actions import ImplementationInput
+    from arkitekt_spec.declare.structures.registry import StructureRegistry
+
+    def echo(item: str) -> str:
+        """Echo"""
+        return item
+
+    app = FastAPI()
+    agent = FastApiAgent(app_registry=AppRegistry())
+    submitted: list[Any] = []
+
+    async def capture_submit(message: Any) -> str:
+        submitted.append(message)
+        return message.task
+
+    object.__setattr__(agent.transport, "asubmit", capture_submit)
+    implementation = ImplementationInput(
+        definition=prepare_definition(echo, structure_registry=StructureRegistry()),
+        dependencies=(),
+        interface="echo",
+    )
+    router = APIRouter()
+    add_implementation_route(router, agent, implementation, **kwargs)
+    app.include_router(router)
+    return app, submitted
+
+
+def test_implementation_route_is_authenticated() -> None:
+    app, submitted = _implementation_app(expand_user_from_request=expand_user)
+    client = TestClient(app)
+
+    rejected = client.post("/echo", json={"args": {"item": "hi"}})
+    assert rejected.status_code == 401 and submitted == []
+
+    accepted = client.post(
+        "/echo", json={"args": {"item": "hi"}}, headers={"authorization": GOOD_TOKEN}
+    )
+    assert accepted.status_code == 200
+    assert submitted[0].user == "trusted-user"
+
+
 # ----------------------------------------------------------------------- websocket
 
 

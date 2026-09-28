@@ -208,9 +208,21 @@ def add_lock_routes(
 def add_implementation_routes(
     app: FastAPI,
     agent: FastApiAgent,
+    get_user_from_request: Callable[[Request], object] | None = None,
+    expand_user_from_request: ExpandUserFromRequest | None = None,
 ) -> None:
-    """Include all implementation execution routes."""
-    _include_router(app, build_implementation_router(agent))
+    """Include all implementation execution routes.
+
+    They authenticate with the same hooks as :func:`add_agent_routes`.
+    """
+    _include_router(
+        app,
+        build_implementation_router(
+            agent,
+            get_user_from_request=get_user_from_request,
+            expand_user_from_request=expand_user_from_request,
+        ),
+    )
 
 
 def add_schema_routes(
@@ -313,7 +325,12 @@ def configure_fastapi(
         if add_locks:
             add_lock_routes(fastapi_app, agent, locks_path=locks_path)
         if add_implementations:
-            add_implementation_routes(fastapi_app, agent)
+            add_implementation_routes(
+                fastapi_app,
+                agent,
+                get_user_from_request=get_user_from_request,
+                expand_user_from_request=expand_user_from_request,
+            )
         if add_schema:
             add_schema_routes(fastapi_app, agent)
         configure_openapi(fastapi_app)
