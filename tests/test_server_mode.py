@@ -4,6 +4,7 @@ import ast
 import subprocess
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from fastapi import FastAPI
@@ -29,7 +30,7 @@ def test_serving_loads_nothing_of_the_distributed_runtime() -> None:
 
 async def calls_another(task: Task) -> str:
     """Calls another action"""
-    await task.acall("somewhere", {})  # type: ignore[attr-defined]
+    await task.acall(SimpleNamespace(id="action-2", args=[], returns=[]), {})  # type: ignore[attr-defined]
     return "never"
 
 
