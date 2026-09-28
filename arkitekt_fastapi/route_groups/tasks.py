@@ -1,0 +1,34 @@
+"""Task overview route builders."""
+
+from __future__ import annotations
+
+from fastapi import APIRouter, Query
+
+from arkitekt_fastapi.agent import FastApiAgent
+from arkitekt_fastapi.models import TaskCollectionResponse
+
+from .common import normalize_filter_values
+
+
+def build_task_router(
+    agent: FastApiAgent,
+    tasks_path: str = "/tasks",
+) -> APIRouter:
+    """Build overview routes for managed tasks."""
+    router = APIRouter(tags=["Tasks"])
+
+    async def list_tasks(
+        action_keys: list[str] | None = Query(default=None),
+    ) -> TaskCollectionResponse:
+        normalized_action_keys = normalize_filter_values(action_keys)
+        return await agent.aget_task_views(normalized_action_keys)
+
+    router.add_api_route(
+        tasks_path,
+        list_tasks,
+        methods=["GET"],
+        response_model=TaskCollectionResponse,
+        summary="List tasks",
+        description="List current tasks filtered by optional action keys.",
+    )
+    return router

@@ -1,0 +1,56 @@
+name: Release with uv and semantic-release
+
+on:
+  push:
+    branches: [main, next, "*.x"] # main: stable, next: prereleases, N.x: maintenance
+
+# Needed so semantic-release can push the release tag and create the GitHub
+# Release. id-token is for PyPI trusted publishing via `uv publish`.
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  # Run the suite, then let python-semantic-release decide the next version from
+  # the conventional-commit history, tag HEAD (vX.Y.Z on main / vX.Y.Z-rc.N on
+  # next) and cut a GitHub Release with generated notes. Nothing is committed or
+  # pushed to the branch: the version lives only in the tag, and hatch-vcs reads
+  # it at build time. Only if a release was actually cut do we upload the
+  # freshly built wheel to PyPI.
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # semantic-release needs the full history + tags
+
+      - name: Install uv and set Python
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Run tests
+        run: uv run pytest 
+
+      - name: Python Semantic Release
+        id: release
+        uses: python-semantic-release/python-semantic-release@v10
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Tag-only release: no bump commit is created or pushed, so local
+          # clones never fall behind the branch. CHANGELOG.md is not written
+          # either - the release notes live on the GitHub Release.
+          commit: false
+          changelog: false
+          # The action runs in its own Docker container without uv, so the
+          # build_command in pyproject pip-installs uv before `uv build`.
+
+      # rc versions upload fine; pip ignores them unless `--pre` is passed.
+      - name: Publish to PyPI
+        if: steps.release.outputs.released == 'true'
+        run: uv publish
