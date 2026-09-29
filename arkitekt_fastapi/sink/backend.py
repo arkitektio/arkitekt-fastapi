@@ -10,11 +10,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from arkitekt_fastapi.sink.protocol import StateSink
 from arkitekt_spec.declare.protocol.types import AnyState
-from arkitekt_spec.scalars import Identifier
 
 
 class SinkAgentBackend(BaseModel):
-    """Mints sessions through a sink; nothing to register, nothing to shelve."""
+    """Mints sessions through a sink; nothing to register."""
 
     sink: StateSink = Field(description="The sink that owns sessions for this agent.")
     states: list[AnyState] = Field(
@@ -38,17 +37,3 @@ class SinkAgentBackend(BaseModel):
             states=self.states,
             implementations=self.implementations,
         )
-
-    async def ashelve(
-        self,
-        identifier: Identifier,
-        resource_id: str,
-        label: str | None = None,
-        description: str | None = None,
-    ) -> str:
-        """Not supported for the in-process agent."""
-        raise NotImplementedError("Shelving is not implemented for FastApiAgent yet.")
-
-    async def acollect(self, key: str) -> None:
-        """Not supported for the in-process agent."""
-        raise NotImplementedError("Shelving is not implemented for FastApiAgent yet.")

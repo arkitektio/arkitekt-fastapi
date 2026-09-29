@@ -193,7 +193,14 @@ def test_one_order_for_tasks_and_state_and_replay_at_any_position(served) -> Non
         )
         assert [f.get("seq") for f in legacy_frames] == [f.get("seq") for f in frames[1:]]
         for plain, stamped in zip(legacy_frames, frames[1:]):
-            assert {k: v for k, v in stamped.items() if k not in ("pos", "journal_session")} == plain
+            assert {
+                k: v
+                for k, v in stamped.items()
+                if k not in ("pos", "journal_session", "task_step")
+            } == plain
+        # Per task: its steps, 1, 2, 3, ... (the ASSIGN takes none; the UNLOCK is the holder's).
+        assert "task_step" not in frames[0]
+        assert [f["task_step"] for f in frames[1:]] == [1, 2, 3, 4, 5, 6]
 
         # The stored journal is the same sequence.
         listing = client.get("/journal/current").json()
@@ -290,12 +297,16 @@ def test_delivery_order_is_journal_order_under_concurrency(served) -> None:  # n
         assert pos[0] == start_pos + 1
         assert_contiguous(pos)
 
-        # Per task: ASSIGN first, the end last (its UNLOCK carries no task).
+        # Per task: ASSIGN first, the end last but for its UNLOCKs.
         for task in ids:
             own = [f for f in frames if f.get("task") == task or f.get("task_id") == task]
             assert own[0]["type"] == "ASSIGN"
             end = next(i for i, f in enumerate(own) if f["type"] == "COMPLETED")
-            assert end == len(own) - 1, "nothing of a task after its end"
+            assert all(f["type"] == "UNLOCK" for f in own[end + 1 :]), (
+                "nothing of a task after its end"
+            )
+            steps = [f["task_step"] for f in own[1:]]
+            assert steps == list(range(1, len(steps) + 1)), "gapless per task"
             # A task's patches come before its YIELD.
             kinds_of_task = kinds(own)
             if "STATE_PATCH" in kinds_of_task:

@@ -9,8 +9,8 @@ license = "MIT"
 # Serving an app needs the execution core and FastAPI, not the distributed runtime:
 # no rekuest, no websockets client, no rath, no graphql-core.
 dependencies = [
-    "arkitekt-spec>=1.1.1",
-    "arkitekt-runtime>=1.0.2",
+    "arkitekt-spec>=1.5",
+    "arkitekt-runtime>=4.0",
     "pydantic>=2.11",
     "koil>=3.3.3",
     "fastapi>=0.100",

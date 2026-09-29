@@ -69,6 +69,7 @@ async def ensure_sqlite_schema(db: aiosqlite.Connection) -> None:
             subject TEXT,
             message_id TEXT NOT NULL,
             payload TEXT NOT NULL,
+            step INTEGER,
             PRIMARY KEY (session_id, pos),
             FOREIGN KEY (session_id) REFERENCES sessions(session_id)
         );
@@ -84,6 +85,14 @@ async def ensure_sqlite_schema(db: aiosqlite.Connection) -> None:
         "CREATE INDEX IF NOT EXISTS idx_journal_kind ON journal(session_id, kind, pos);"
     )
 
+    # The entry's step in its task (``task_step`` on the wire); journals written
+    # before it existed get it as NULL.
+    await ensure_column(
+        db,
+        table_name="journal",
+        column_name="step",
+        column_definition="INTEGER",
+    )
     await ensure_column(
         db,
         table_name="state_snapshots",

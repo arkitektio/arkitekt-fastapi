@@ -141,6 +141,7 @@ class SQLLiteSink:
                 entry.subject,
                 entry.message_id,
                 json.dumps(entry.payload, separators=(",", ":")),
+                entry.step,
             )
             for entry in entries
         ]
@@ -150,9 +151,9 @@ class SQLLiteSink:
                     """
                     INSERT OR IGNORE INTO journal (
                         session_id, pos, global_rev, event_time, kind,
-                        task_id, action_key, subject, message_id, payload
+                        task_id, action_key, subject, message_id, payload, step
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     rows,
                 )

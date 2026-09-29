@@ -395,6 +395,8 @@ class FastApiTransport(AgentTransport):
                 )
                 frame["pos"] = entry.pos
                 frame["journal_session"] = entry.session_id
+                if entry.step is not None:
+                    frame["task_step"] = entry.step
                 text = _dump(frame)
             subscriber.frames.put_nowait(text)
 

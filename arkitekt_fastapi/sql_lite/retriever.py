@@ -463,7 +463,7 @@ class SQLLiteRetriever:
 
 
 JOURNAL_COLUMNS = (
-    "session_id, pos, global_rev, event_time, kind, task_id, action_key, subject, message_id, payload"
+    "session_id, pos, global_rev, event_time, kind, task_id, action_key, subject, message_id, payload, step"
 )
 #: Kinds that belong to the whole session rather than to a task, state or lock.
 SESSION_KINDS = "'SESSION_INIT', 'STATE_SNAPSHOT'"
@@ -488,6 +488,7 @@ def _entry_from_row(row: Sequence[Any]) -> JournalEntry:
         subject,
         message_id,
         payload,
+        step,
     ) = row
     try:
         decoded = json.loads(payload)
@@ -504,4 +505,5 @@ def _entry_from_row(row: Sequence[Any]) -> JournalEntry:
         subject=subject,
         message_id=message_id,
         payload=decoded if isinstance(decoded, dict) else {},
+        step=step,
     )
