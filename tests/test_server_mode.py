@@ -38,7 +38,8 @@ async def calls_another(task: Task) -> str:
 async def test_calling_another_action_fails_at_once(tmp_path: Path) -> None:
     """A served app has no one to route a call through, so the task fails instead of hanging."""
     registry = AppRegistry()
-    registry.register(calls_another)
+    # A workflow: a plain action may not call at all, whatever the runtime.
+    registry.register_workflow(calls_another)
     app = FastAPI()
     configure_fastapi(app, registry, db_file=str(tmp_path / "agent.db"))
 

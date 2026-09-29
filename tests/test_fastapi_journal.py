@@ -171,6 +171,7 @@ def test_one_order_for_tasks_and_state_and_replay_at_any_position(served) -> Non
         frames = until_terminal(ws, task)
         assert kinds(frames) == [
             "ASSIGN",
+            "STARTED",
             "PROGRESS",
             "LOCK",
             "STATE_PATCH",
@@ -186,7 +187,7 @@ def test_one_order_for_tasks_and_state_and_replay_at_any_position(served) -> Non
 
         # The legacy subscriber gets the frames it always got: no ASSIGN, no positions.
         legacy_frames = until_terminal(legacy, task)
-        assert kinds(legacy_frames) == ["PROGRESS", "LOCK", "STATE_PATCH", "YIELD", "COMPLETED", "UNLOCK"]
+        assert kinds(legacy_frames) == ["STARTED", "PROGRESS", "LOCK", "STATE_PATCH", "YIELD", "COMPLETED", "UNLOCK"]
         assert all("pos" not in f and "journal_session" not in f for f in legacy_frames)
         assert [f["id"] for f in legacy_frames] == [f["id"] for f in frames[1:]], (
             "the same messages, with the same ids"
@@ -200,20 +201,20 @@ def test_one_order_for_tasks_and_state_and_replay_at_any_position(served) -> Non
             } == plain
         # Per task: its steps, 1, 2, 3, ... (the ASSIGN takes none; the UNLOCK is the holder's).
         assert "task_step" not in frames[0]
-        assert [f["task_step"] for f in frames[1:]] == [1, 2, 3, 4, 5, 6]
+        assert [f["task_step"] for f in frames[1:]] == [1, 2, 3, 4, 5, 6, 7]
 
         # The stored journal is the same sequence.
         listing = client.get("/journal/current").json()
         entries = listing["entries"]
-        assert len(entries) == 8
+        assert len(entries) == 9
         assert_contiguous([e["pos"] for e in entries])
         assert entries[0]["kind"] == "SESSION_INIT"
-        assert (entries[7]["kind"], entries[7]["task_id"]) == ("UNLOCK", task)
-        assert listing["last_pos"] == 8
-        assert client.get("/journal").json() == {"session_id": session, "pos": 8, "global_rev": 1}
+        assert (entries[8]["kind"], entries[8]["task_id"]) == ("UNLOCK", task)
+        assert listing["last_pos"] == 9
+        assert client.get("/journal").json() == {"session_id": session, "pos": 9, "global_rev": 1}
 
         # Time travel: before the patch, between the end and the unlock, after.
-        lock_pos, done_pos = frames[2]["pos"], frames[5]["pos"]
+        lock_pos, done_pos = frames[3]["pos"], frames[6]["pos"]
         at = client.get(f"/journal/{session}/at/{lock_pos}").json()
         assert at["states"]["CameraState"]["exposure_ms"] == 10.0
         assert at["global_rev"] == 0
@@ -239,6 +240,7 @@ def test_one_order_for_tasks_and_state_and_replay_at_any_position(served) -> Non
         assert events["task"]["status"] == "COMPLETED"
         assert [e["kind"] for e in events["entries"]] == [
             "ASSIGN",
+            "STARTED",
             "PROGRESS",
             "LOCK",
             "STATE_PATCH",
@@ -248,7 +250,7 @@ def test_one_order_for_tasks_and_state_and_replay_at_any_position(served) -> Non
         ]
         assert client.get("/tasks/nope/events").status_code == 404
 
-        assert client.get("/session_info").json()["current_pos"] == 8
+        assert client.get("/session_info").json()["current_pos"] == 9
 
         # Key filters route like the websocket.
         only_locks = client.get("/journal/current", params={"lock_keys": "camera", "action_keys": "none", "state_keys": "none"}).json()
