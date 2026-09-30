@@ -44,21 +44,16 @@ def add_implementation_route(
         "title": request_schema_name,
         "properties": {
             "args": args_schema,
-            "policy": {
-                "type": "object",
-                "description": "The policy for the task",
-            },
             "reference": {"type": "string", "description": "A reference string"},
-            "cached": {"type": "boolean", "default": False},
-            "log": {"type": "boolean", "default": False},
             "capture": {"type": "boolean", "default": False},
-            "ephemeral": {"type": "boolean", "default": False},
             "step": {
                 "type": "boolean",
                 "description": "Whether to step through the task",
             },
         },
-        "required": ["args", "cached", "log", "capture", "ephemeral"],
+        # Exactly what AssignInput accepts: it forbids extra keys, so a field
+        # advertised here that it does not know would be rejected on submit.
+        "required": ["args"],
     }
     response_schema = create_json_schema_from_ports(
         implementation.definition.returns,

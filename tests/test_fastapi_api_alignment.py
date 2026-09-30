@@ -181,3 +181,38 @@ def test_implementation_route_reuses_fastapi_assign_builder() -> None:
     assert captured[0].org == "fastapi"
     assert captured[0].implementation == "fastapi"
     assert captured[0].action == "api_call"
+
+
+def test_implementation_request_schema_advertises_only_what_assign_accepts() -> None:
+    """Every field the OpenAPI request schema documents must pass AssignInput.
+
+    AssignInput forbids extra keys, so a documented field it does not know (the old
+    `policy`) would make a client that follows the schema fail on submit.
+    """
+    agent = FastApiAgent()
+
+    def echo(item: str) -> str:
+        return item
+
+    implementation = ImplementationInput(
+        definition=prepare_definition(echo, structure_registry=StructureRegistry()),
+        dependencies=(),
+        interface="echo",
+        needs_token=True,
+    )
+
+    router = APIRouter()
+    add_implementation_route(router, agent, implementation)
+    (request_schema,) = (
+        schema
+        for name, schema in router.__dict__["_custom_schemas"].items()
+        if name.endswith("Request")
+    )
+
+    samples = {"args": {"item": "hello"}, "reference": "ref", "capture": True, "step": True}
+    assert set(request_schema["properties"]) == set(samples)
+    assert request_schema["required"] == ["args"]
+
+    assign_input = agent.build_assign_input(samples, interface="echo")
+    assert assign_input.reference == "ref"
+    assert assign_input.step is True
