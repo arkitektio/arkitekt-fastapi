@@ -128,7 +128,7 @@ def test_schema_router_exposes_blok_implementation_inputs() -> None:
     app = FastAPI()
     agent = FastApiAgent()
     app_registry = AppRegistry()
-    app_registry.register_blok("demo_blok", "<Page />", description="Demo blok")
+    app_registry.register_blok("demo_blok", "<div />", description="Demo blok")
     agent.app_registry = app_registry
 
     app.include_router(build_schema_router(agent))

@@ -31,10 +31,18 @@ def build_schema_router(
         blok_schemas = agent.app_registry.get_declared_bloks()
         return {"count": len(blok_schemas), "bloks": blok_schemas}
 
+    async def get_asset_schemas() -> dict:
+        assets = [
+            asset.model_dump(mode="json", exclude_none=True)
+            for asset in agent.app_registry.get_declared_assets()
+        ]
+        return {"count": len(assets), "assets": assets}
+
     router.add_api_route(
         "/schemas/implementations", get_implementation_schemas, methods=["GET"]
     )
     router.add_api_route("/schemas/states", get_state_schemas, methods=["GET"])
     router.add_api_route("/schemas/locks", get_lock_schemas, methods=["GET"])
     router.add_api_route("/schemas/bloks", get_blok_schemas, methods=["GET"])
+    router.add_api_route("/schemas/assets", get_asset_schemas, methods=["GET"])
     return router

@@ -12,6 +12,7 @@ from .auth import (
 )
 from .routes import (
     add_agent_routes,
+    add_asset_routes,
     add_implementation_routes,
     add_lock_routes,
     add_schema_routes,
@@ -40,6 +41,7 @@ __all__ = [
     "configure_fastapi",
     "create_lifespan",
     "add_agent_routes",
+    "add_asset_routes",
     "add_implementation_routes",
     "add_lock_routes",
     "add_schema_routes",

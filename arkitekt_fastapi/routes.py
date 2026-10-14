@@ -25,6 +25,7 @@ from arkitekt_fastapi.openapi_utils import (
 )
 from arkitekt_fastapi.route_groups import (
     add_implementation_route,
+    build_asset_router,
     build_core_router,
     build_implementation_router,
     build_journal_router,
@@ -233,6 +234,15 @@ def add_schema_routes(
     _include_router(app, build_schema_router(agent))
 
 
+def add_asset_routes(
+    app: FastAPI,
+    agent: FastApiAgent,
+    assets_path: str = "/assets",
+) -> None:
+    """Include the routes serving the app's registered assets by name."""
+    _include_router(app, build_asset_router(agent, assets_path=assets_path))
+
+
 def configure_fastapi(
     app: FastAPI,
     app_registry: AppRegistry,
@@ -246,11 +256,13 @@ def configure_fastapi(
     add_tasks: bool = True,
     add_task_details: bool = True,
     add_journal: bool = True,
+    add_assets: bool = True,
     ws_path: str = "/ws",
     tasks_path: str = "/tasks",
     assign_path: str = "/assign",
     states_path: str = "/states",
     locks_path: str = "/locks",
+    assets_path: str = "/assets",
     db_file: str = "agent_data.db",
     app_context: Any | None = None,
     bound_app: Any | None = None,
@@ -284,6 +296,11 @@ def configure_fastapi(
             absent, in which case the websocket stays unauthenticated as before.
         add_journal: Serve the journal routes (``/journal…`` and
             ``{tasks_path}/{task_id}/events``, see ``docs/journal.md``).
+        add_assets: Serve the files the app registered with ``register_asset``,
+            each at ``{assets_path}/<name>``: the file itself, or a redirect to
+            the source of one the app does not hold. Like the schema routes,
+            they ask for no user.
+        assets_path: Where the assets are served.
     """
     # Imported here: the sqlite retriever reads the protocol under this
     # package, so a module-level import would be circular.
@@ -331,6 +348,8 @@ def configure_fastapi(
                 get_user_from_request=get_user_from_request,
                 expand_user_from_request=expand_user_from_request,
             )
+        if add_assets:
+            add_asset_routes(fastapi_app, agent, assets_path=assets_path)
         if add_schema:
             add_schema_routes(fastapi_app, agent)
         configure_openapi(fastapi_app)
@@ -348,6 +367,7 @@ def configure_fastapi(
 
 __all__ = [
     "add_agent_routes",
+    "add_asset_routes",
     "add_implementation_route",
     "add_implementation_routes",
     "add_journal_routes",
