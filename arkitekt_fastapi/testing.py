@@ -10,7 +10,7 @@ import json
 import threading
 import time
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 from collections.abc import Callable, Generator
 
 from fastapi import FastAPI
@@ -925,7 +925,7 @@ def create_test_lifespan(
 
 
 def create_test_app_and_agent(
-    app_registry: Optional["AppRegistry"] = None,
+    app_registry: AppRegistry | None = None,
 ) -> tuple[FastAPI, FastApiAgent, AppRegistry]:
     """Create a fresh FastAPI app and agent for testing.
 
