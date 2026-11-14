@@ -377,7 +377,7 @@ class FastApiTransport(AgentTransport):
         """Queue a new journal entry for the journal subscribers it is routed to.
 
         Called by the journal under its lock, in ``pos`` order. The frame is the
-        message as every client gets it (with its stream ``seq``) plus ``pos`` and
+        message as every client gets it plus ``pos`` and
         ``journal_session``; an ``ASSIGN`` is its recorded payload.
         """
         if not self._journal_subscribers:

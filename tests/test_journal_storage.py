@@ -25,7 +25,6 @@ def _patch(rev: int, task: str | None, op: str = "replace", path: str = "/exposu
         op=op,
         path=path,
         value=rev + 1 if value is None else value,
-        old_value=None,
         task_id=task,
     )
 
