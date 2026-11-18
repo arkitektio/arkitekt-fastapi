@@ -4,12 +4,14 @@ from dataclasses import dataclass, field
 
 from arkitekt_runtime import messages
 from arkitekt_runtime.agents.journal import JournalEntry
+from arkitekt_fastapi.sink.protocol import StateChange
 from arkitekt_spec.declare.protocol.types import AnyState
 
 
 @dataclass
 class MemoryStore:
-    patches: list[messages.StatePatch] = field(default_factory=list)
+    patches: list[StateChange] = field(default_factory=list)
+    """The updates of every state, one per revision."""
     snapshots: list[messages.StateSnapshot] = field(default_factory=list)
     journal: dict[tuple[str, int], JournalEntry] = field(default_factory=dict)
     """The agent's journal, by ``(session_id, pos)`` (in insertion order)."""
@@ -37,8 +39,8 @@ class MemorySink:
     async def adump_snapshot(self, snapshot: messages.StateSnapshot):
         self.store.snapshots.append(snapshot)
 
-    async def awrite_patch(self, patch: messages.StatePatch):
-        self.store.patches.append(patch)
+    async def awrite_update(self, change: StateChange):
+        self.store.patches.append(change)
 
     async def awrite_journal(self, entries: Sequence[JournalEntry]) -> None:
         for entry in entries:

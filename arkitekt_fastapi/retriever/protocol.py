@@ -22,6 +22,7 @@ class PatchEvent:
     correlation_id: str
     session_id: str
     patch: JSONSerializable
+    """The update as an RFC 6902 patch document: a list of operations, applied in order."""
 
 
 @dataclass

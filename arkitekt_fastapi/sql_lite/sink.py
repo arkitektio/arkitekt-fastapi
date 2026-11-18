@@ -7,6 +7,7 @@ from datetime import datetime, UTC
 
 from arkitekt_runtime import messages
 from arkitekt_runtime.agents.journal import JournalEntry
+from arkitekt_fastapi.sink.protocol import StateChange
 from arkitekt_fastapi.sql_lite.schema import ensure_sqlite_schema
 from arkitekt_spec.declare.protocol.types import AnyState
 
@@ -85,38 +86,35 @@ class SQLLiteSink:
                     )
                 await db.commit()
 
-    async def awrite_patch(self, patch: messages.StatePatch) -> None:
-        """Write a single patch event to the store."""
-        global_current_rev = patch.global_rev - 1
-        global_future_rev = patch.global_rev
+    async def awrite_update(self, change: StateChange) -> None:
+        """Write one update of a state to the store: one row for its revision."""
+        global_current_rev = change.global_rev - 1
+        global_future_rev = change.global_rev
 
-        target_session = patch.session_id or self.current_session_id
-        epoch_ms = dt_to_epoch_ms(datetime.fromtimestamp(patch.ts, tz=UTC))
-
-        # We dump the value to a JSON string. If the op is "remove", value might be None.
-        value_as_json = json.dumps(patch.value) if patch.value is not None else None
+        target_session = change.session_id or self.current_session_id
+        epoch_ms = dt_to_epoch_ms(datetime.fromtimestamp(change.ts, tz=UTC))
 
         async with self._write_lock:
             async with aiosqlite.connect(self.db_path) as db:
                 try:
+                    # ``op`` and ``path`` are what a row held before a row was an update;
+                    # they cannot be dropped from files written then, so they say so.
                     await db.execute(
                         """
                         INSERT INTO state_patches (
                             state_id, global_current_rev, global_future_rev, event_time, 
-                            correlation_id, session_id, op, path, value
+                            correlation_id, session_id, op, path, value, ops
                         ) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        VALUES (?, ?, ?, ?, ?, ?, 'update', '', NULL, ?)
                     """,
                         (
-                            patch.state_name,
+                            change.state_name,
                             global_current_rev,
                             global_future_rev,
                             epoch_ms,
-                            patch.task_id,
+                            change.task_id,
                             target_session,
-                            patch.op,
-                            patch.path,
-                            value_as_json,
+                            json.dumps(change.ops),
                         ),
                     )
                     await db.commit()

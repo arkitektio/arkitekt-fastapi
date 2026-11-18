@@ -68,8 +68,8 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aiosqlite", specifier = ">=0.19" },
-    { name = "arkitekt-runtime", specifier = ">=10.0.2" },
-    { name = "arkitekt-spec", specifier = ">=12" },
+    { name = "arkitekt-runtime", specifier = ">=10.2" },
+    { name = "arkitekt-spec", specifier = ">=12.3" },
     { name = "fastapi", specifier = ">=0.100" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "jsonpatch", specifier = ">=1.33" },
@@ -88,7 +88,7 @@ dev = [
 
 [[package]]
 name = "arkitekt-runtime"
-version = "10.0.2"
+version = "10.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "arkitekt-spec" },
@@ -97,14 +97,14 @@ dependencies = [
     { name = "koil" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3e/2d/8836f16bd1e41e7bba63d55b24b8bebcaedc990419f44b089de78f466299/arkitekt_runtime-10.0.2.tar.gz", hash = "sha256:cdbc1fbef5a402b2dafc951f0bd15d8c8d404186e07da6fe572c62788744359a", size = 134559, upload-time = "2026-11-16T15:19:10.557Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2d/be/b8230bc6fc34aef07ec125f42b9664663e72a10830fd1256efd36f45f426/arkitekt_runtime-10.2.0.tar.gz", hash = "sha256:1773842137454456b9a936fc0816f0cff9c83b4510c30e04a080e8ff1e1ec8b6", size = 139610, upload-time = "2026-11-18T14:54:39.178Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d5/7a/b37e9a5e64486fbb18b63a023e99cb87e6d877fe5df05f40857a08a0efe2/arkitekt_runtime-10.0.2-py3-none-any.whl", hash = "sha256:a3c4bb2ed505eb5f049a7ce05b8d2a2093e9929469926471e7efe3941ddf0ff1", size = 164990, upload-time = "2026-11-16T15:19:09.298Z" },
+    { url = "https://files.pythonhosted.org/packages/9c/f5/655ef2dc2382385c933a505cf7b2575f2ab63bceea3320a70fd4ae34caf9/arkitekt_runtime-10.2.0-py3-none-any.whl", hash = "sha256:f7c1c8a22ecbd62f4ad1c89141283d73a7ae434d61e3bfa4eb5e6e49c796ae8a", size = 170044, upload-time = "2026-11-18T14:54:38.097Z" },
 ]
 
 [[package]]
 name = "arkitekt-spec"
-version = "12.0.0"
+version = "12.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "certifi" },
@@ -114,9 +114,9 @@ dependencies = [
     { name = "pydantic" },
     { name = "pyyaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/df/8d/28f12932ce095599231cac6774cd120ffd3df4ca8b4a112369542ace94c1/arkitekt_spec-12.0.0.tar.gz", hash = "sha256:3d5df9c3a8d99809f797b799227d35602c4693507d256f7d745609211c1493f0", size = 352450, upload-time = "2026-11-16T15:12:06.241Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6c/75/b1f9eec4b8faf936b7a5a38e92a23534c2f5ea6ca71726f7b4a48e3521d7/arkitekt_spec-12.3.0.tar.gz", hash = "sha256:b4adf39695c42170b0060e566bc155a7c8996756ade650adb1895defa3a5508f", size = 354365, upload-time = "2026-11-18T14:18:38.147Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/77/0f/5d798fccc52fb87ee162a15b4cacb77ad7e91239a81cd44742cdada9ca28/arkitekt_spec-12.0.0-py3-none-any.whl", hash = "sha256:c54d65c963c34062af7535eb9f9e0e6770d755286fbac883b3912cd260a29bdc", size = 403708, upload-time = "2026-11-16T15:12:04.942Z" },
+    { url = "https://files.pythonhosted.org/packages/df/59/610dfd954b60ccf19a07b9fee7527e3c1937d7cef106a5dcad988870f2b8/arkitekt_spec-12.3.0-py3-none-any.whl", hash = "sha256:763576b8630720f802fc6ce877cc7b1290e3da71cb2181e76ceaa4d5e2b6f868", size = 405682, upload-time = "2026-11-18T14:18:36.674Z" },
 ]
 
 [[package]]
@@ -508,14 +508,14 @@ wheels = [
 
 [[package]]
 name = "koil"
-version = "3.3.6"
+version = "3.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/27/3a/c0b5fa5e69df7bc9d4f8769512aa29d472f07593bd4f0c5d922e72e3a697/koil-3.3.6.tar.gz", hash = "sha256:07cee5dc8f22effbe4c5823cefa0e1b3e7afa513154d045f4d64b16e7b428bff", size = 42903, upload-time = "2026-10-04T18:50:36.417Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/21/aa/4fec62eb889d95908f05f253a0d7b9a0fd8c927d616ee1b0333d40c894d7/koil-3.4.1.tar.gz", hash = "sha256:491fce3eb9bd804345d4f961c3a88e3d7f45a0825fc400c0fe53fb59ec20ae26", size = 57409, upload-time = "2026-11-18T14:39:05.401Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/83/04/c72f6873146546069cd3920691972869c89c21970b7712016d415e1cae68/koil-3.3.6-py3-none-any.whl", hash = "sha256:27b368019d6a7051312eceefe675fa983548f83aa776d8ea04b5196628cffbb8", size = 49234, upload-time = "2026-10-04T18:50:35.278Z" },
+    { url = "https://files.pythonhosted.org/packages/fb/bf/e83245b5f0f188871ff877e8647730654491787b9ff337f97df94875a98f/koil-3.4.1-py3-none-any.whl", hash = "sha256:8e403137818b1ee891e4f1a0b1fd4d96cc7ac9102bbcf09010906a68112d4bea", size = 64963, upload-time = "2026-11-18T14:39:04.301Z" },
 ]
 
 [[package]]

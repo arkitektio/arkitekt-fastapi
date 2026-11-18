@@ -16,6 +16,7 @@ import asyncio
 import copy
 import json
 import logging
+import time
 import uuid
 from dataclasses import dataclass
 from types import TracebackType
@@ -46,7 +47,7 @@ from arkitekt_fastapi.sink.backend import SinkAgentBackend
 from arkitekt_fastapi.retriever.memory_retriever import MemoryRetriever
 from arkitekt_fastapi.retriever.protocol import StateRetriever
 from arkitekt_fastapi.sink.memory_sink import MemorySink
-from arkitekt_fastapi.sink.protocol import StateSink
+from arkitekt_fastapi.sink.protocol import StateChange, StateSink
 from arkitekt_fastapi.auth import (
     AuthenticationError,
     ExpandUserFromRequest,
@@ -65,7 +66,7 @@ logger = logging.getLogger(__name__)
 
 def _is_state_message(message: messages.FromAgentMessage) -> bool:
     """Return whether a message belongs to the state update stream."""
-    return isinstance(message, messages.StatePatch)
+    return isinstance(message, messages.StateUpdate)
 
 
 def _is_lock_message(message: messages.FromAgentMessage) -> bool:
@@ -82,9 +83,9 @@ def _task_routing_key(message: messages.FromAgentMessage) -> str | None:
 
 def _state_routing_key(message: messages.FromAgentMessage) -> str | None:
     """Resolve the state name used for state websocket subscriptions."""
-    if not isinstance(message, messages.StatePatch):
+    if not isinstance(message, messages.StateUpdate):
         return None
-    return message.state_name
+    return message.state
 
 
 def _lock_routing_key(message: messages.FromAgentMessage) -> str | None:
@@ -953,12 +954,22 @@ class FastApiAgent(BaseAgent):
         """Broadcast to websocket clients (journal subscribers already have ``entry``)."""
         await self.transport.asend(message, entry)
 
-    async def apublish_patch(
-        self, patch: messages.StatePatch, entry: JournalEntry | None = None
+    async def apublish_update(
+        self, update: messages.StateUpdate, entry: JournalEntry | None = None
     ) -> None:
-        """Publish a state patch event: broadcast to websocket clients and persist to sink."""
-        await self._asend_out(patch, entry)
-        await self.sink.awrite_patch(patch)
+        """Publish a state update: broadcast to websocket clients and persist to sink."""
+        await self._asend_out(update, entry)
+        await self.sink.awrite_update(
+            StateChange(
+                state_name=update.state,
+                global_rev=update.global_rev,
+                # The frame leaves both to its journal stamp.
+                session_id=entry.session_id if entry is not None else self.current_session,
+                ts=entry.event_time / 1000 if entry is not None else time.time(),
+                task_id=update.task,
+                ops=[op.model_dump(mode="json") for op in update.ops],
+            )
+        )
 
     async def apublish_snapshot(
         self, snapshot: messages.StateSnapshot, entry: JournalEntry | None = None

@@ -111,6 +111,14 @@ async def ensure_sqlite_schema(db: aiosqlite.Connection) -> None:
         column_name="global_future_rev",
         column_definition="INTEGER NOT NULL DEFAULT 0",
     )
+    # A row is one update: its operations, as a JSON list. NULL in rows written when a
+    # row was one operation (``op``, ``path``, ``value``).
+    await ensure_column(
+        db,
+        table_name="state_patches",
+        column_name="ops",
+        column_definition="TEXT",
+    )
 
 
 async def ensure_column(

@@ -174,7 +174,7 @@ def test_one_order_for_tasks_and_state_and_replay_at_any_position(served) -> Non
             "STARTED",
             "PROGRESS",
             "LOCK",
-            "STATE_PATCH",
+            "STATE_UPDATE",
             "YIELD",
             "COMPLETED",
             "UNLOCK",
@@ -187,7 +187,7 @@ def test_one_order_for_tasks_and_state_and_replay_at_any_position(served) -> Non
 
         # The legacy subscriber gets the frames it always got: no ASSIGN, no positions.
         legacy_frames = until_terminal(legacy, task)
-        assert kinds(legacy_frames) == ["STARTED", "PROGRESS", "LOCK", "STATE_PATCH", "YIELD", "COMPLETED", "UNLOCK"]
+        assert kinds(legacy_frames) == ["STARTED", "PROGRESS", "LOCK", "STATE_UPDATE", "YIELD", "COMPLETED", "UNLOCK"]
         assert all("pos" not in f and "journal_session" not in f for f in legacy_frames)
         assert [f["id"] for f in legacy_frames] == [f["id"] for f in frames[1:]], (
             "the same messages, with the same ids"
@@ -243,7 +243,7 @@ def test_one_order_for_tasks_and_state_and_replay_at_any_position(served) -> Non
             "STARTED",
             "PROGRESS",
             "LOCK",
-            "STATE_PATCH",
+            "STATE_UPDATE",
             "YIELD",
             "COMPLETED",
             "UNLOCK",
@@ -255,8 +255,8 @@ def test_one_order_for_tasks_and_state_and_replay_at_any_position(served) -> Non
         # Key filters route like the websocket.
         only_locks = client.get("/journal/current", params={"lock_keys": "camera", "action_keys": "none", "state_keys": "none"}).json()
         assert [e["kind"] for e in only_locks["entries"]] == ["SESSION_INIT", "LOCK", "UNLOCK"]
-        patches = client.get("/journal/current", params={"kinds": "STATE_PATCH"}).json()
-        assert [e["kind"] for e in patches["entries"]] == ["STATE_PATCH"]
+        patches = client.get("/journal/current", params={"kinds": "STATE_UPDATE"}).json()
+        assert [e["kind"] for e in patches["entries"]] == ["STATE_UPDATE"]
         page = client.get("/journal/current", params={"after": 2, "limit": 2}).json()
         assert [e["pos"] for e in page["entries"]] == [3, 4]
     finally:
@@ -311,9 +311,9 @@ def test_delivery_order_is_journal_order_under_concurrency(served) -> None:  # n
             assert steps == list(range(1, len(steps) + 1)), "gapless per task"
             # A task's patches come before its YIELD.
             kinds_of_task = kinds(own)
-            if "STATE_PATCH" in kinds_of_task:
-                assert kinds_of_task.index("STATE_PATCH") < kinds_of_task.index("YIELD")
-        revs = [f["global_rev"] for f in frames if f["type"] == "STATE_PATCH"]
+            if "STATE_UPDATE" in kinds_of_task:
+                assert kinds_of_task.index("STATE_UPDATE") < kinds_of_task.index("YIELD")
+        revs = [f["global_rev"] for f in frames if f["type"] == "STATE_UPDATE"]
         assert revs == list(range(1, len(revs) + 1))
     finally:
         ws.__exit__(None, None, None)
@@ -434,7 +434,7 @@ def test_nothing_of_a_cancelled_task_after_its_end(served) -> None:  # noqa: ANN
         task = assign(client, "spin", {})
         patches = 0
         while patches < 50:
-            if next_frame(ws)["type"] == "STATE_PATCH":
+            if next_frame(ws)["type"] == "STATE_UPDATE":
                 patches += 1
         assert spun.is_set()
         client.post("/cancel", json={"task": task})
@@ -446,7 +446,7 @@ def test_nothing_of_a_cancelled_task_after_its_end(served) -> None:  # noqa: ANN
 
         assert agent.journal.watermark() is not None
         listing = client.get(
-            f"/journal/{session}", params={"kinds": "STATE_PATCH", "limit": 100000}
+            f"/journal/{session}", params={"kinds": "STATE_UPDATE", "limit": 100000}
         ).json()
         revs = [e["global_rev"] for e in listing["entries"]]
         assert revs == list(range(1, len(revs) + 1)), "no revision was skipped"

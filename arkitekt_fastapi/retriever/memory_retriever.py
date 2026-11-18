@@ -17,6 +17,7 @@ from arkitekt_fastapi.retriever.replay import (
 )
 from arkitekt_runtime.agents.journal import Fold, JournalEntry, entry_matches, world_from_entries
 from arkitekt_fastapi.sink.memory_sink import MemoryStore
+from arkitekt_fastapi.sink.protocol import StateChange
 from arkitekt_runtime.messages import JSONSerializable
 
 
@@ -88,7 +89,7 @@ class MemoryRetriever:
     def _boundaries(
         self,
         key: str,
-        matches: Callable[[messages.StatePatch], bool],
+        matches: Callable[[StateChange], bool],
         state_id: str | None,
         *,
         session: bool,
@@ -328,7 +329,7 @@ class MemoryRetriever:
             session_id=anchor_session,
         )
 
-    def _to_patch_event(self, patch: messages.StatePatch) -> PatchEvent:
+    def _to_patch_event(self, patch: StateChange) -> PatchEvent:
         return PatchEvent(
             timepoint=_patch_timepoint(patch),
             state_id=patch.state_name,
@@ -336,10 +337,10 @@ class MemoryRetriever:
             global_future_rev=patch.global_rev,
             correlation_id=patch.task_id or "",
             session_id=patch.session_id or "",
-            patch=build_patch_document(patch.op, patch.path, patch.value),
+            patch=build_patch_document(patch.ops),
         )
 
-    def _get_patches(self) -> list[messages.StatePatch]:
+    def _get_patches(self) -> list[StateChange]:
         if self.store is None:
             return []
         return list(self.store.patches)
@@ -365,5 +366,5 @@ class MemoryRetriever:
         )
 
 
-def _patch_timepoint(patch: messages.StatePatch) -> datetime:
+def _patch_timepoint(patch: StateChange) -> datetime:
     return datetime.fromtimestamp(patch.ts, tz=UTC)

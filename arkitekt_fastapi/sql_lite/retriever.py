@@ -132,7 +132,7 @@ class SQLLiteRetriever:
 
         query = f"""
         SELECT state_id, global_current_rev, global_future_rev,
-               event_time, correlation_id, session_id, op, path, value
+               event_time, correlation_id, session_id, op, path, value, ops
         FROM state_patches
         WHERE global_current_rev >= ? {state_filter} {session_filter}
         ORDER BY global_current_rev ASC, state_id ASC
@@ -169,7 +169,7 @@ class SQLLiteRetriever:
 
         query = f"""
         SELECT state_id, global_current_rev, global_future_rev,
-               event_time, correlation_id, session_id, op, path, value
+               event_time, correlation_id, session_id, op, path, value, ops
         FROM state_patches
         WHERE global_current_rev >= ? AND global_future_rev <= ?
               {state_filter} {session_filter}
@@ -269,7 +269,7 @@ class SQLLiteRetriever:
         """
         patch_query = f"""
          SELECT state_id, global_current_rev, global_future_rev,
-               event_time, correlation_id, session_id, op, path, value
+               event_time, correlation_id, session_id, op, path, value, ops
         FROM state_patches
         WHERE state_id = ? AND global_current_rev >= ? AND global_future_rev <= ? {session_filter}
         ORDER BY global_current_rev ASC
@@ -347,9 +347,13 @@ class SQLLiteRetriever:
             op,
             path,
             value,
+            ops,
         ) = row
+        # A row is one update; one written before that is its single operation.
         patch_document = build_patch_document(
-            op, path, json.loads(value) if value is not None else None
+            json.loads(ops)
+            if ops is not None
+            else [{"op": op, "path": path, "value": json.loads(value) if value is not None else None}]
         )
 
         return PatchEvent(

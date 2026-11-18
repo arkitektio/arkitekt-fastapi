@@ -18,23 +18,32 @@ from arkitekt_fastapi.retriever.protocol import (
 from arkitekt_runtime.messages import JSONSerializable
 
 
-def build_patch_document(
+def build_patch_operation(
     op: str, path: str, value: JSONSerializable | None
 ) -> dict[str, JSONSerializable]:
-    """Build an RFC-6902 patch document; ``remove`` carries no value."""
-    patch_document: dict[str, JSONSerializable] = {"op": op, "path": path}
+    """Build one RFC-6902 operation; ``remove`` carries no value."""
+    operation: dict[str, JSONSerializable] = {"op": op, "path": path}
     if op != "remove":
-        patch_document["value"] = value
-    return patch_document
+        operation["value"] = value
+    return operation
+
+
+def build_patch_document(ops: Iterable[dict[str, JSONSerializable]]) -> list[JSONSerializable]:
+    """An update as an RFC-6902 patch document: its operations, in order."""
+    return [
+        build_patch_operation(str(op.get("op") or ""), str(op.get("path") or ""), op.get("value"))
+        for op in ops
+    ]
 
 
 def apply_patch_document(
     state_data: JSONSerializable, patch_document: JSONSerializable
 ) -> JSONSerializable:
-    """Apply one patch document to a state value without mutating the input."""
+    """Apply one patch document (an update's operations, in order) to a state value
+    without mutating the input."""
     return cast(
         JSONSerializable,
-        jsonpatch.apply_patch(state_data, [patch_document], in_place=False),
+        jsonpatch.apply_patch(state_data, patch_document, in_place=False),
     )
 
 

@@ -1,7 +1,24 @@
-from typing import Protocol, runtime_checkable
+from dataclasses import dataclass
+from typing import Any, Protocol, runtime_checkable
 
 from arkitekt_runtime import messages
 from arkitekt_spec.declare.protocol.types import AnyState
+
+
+@dataclass
+class StateChange:
+    """One update of a state, as a sink keeps it: the agent's ``STATE_UPDATE`` with the
+    session it was made in and when (which the frame leaves to its journal stamp)."""
+
+    state_name: str
+    global_rev: int
+    """The agent's state revision once the update is applied."""
+    session_id: str
+    ts: float
+    """When the update was made, in seconds since the epoch."""
+    task_id: str | None
+    ops: list[dict[str, Any]]
+    """The update as an RFC 6902 document: its operations, applied in order."""
 
 
 @runtime_checkable
@@ -26,8 +43,8 @@ class StateSink(Protocol):
         """Store a full snapshot of all states at a given revision."""
         ...
 
-    async def awrite_patch(self, patch: messages.StatePatch):
-        """Write a single patch event to the store."""
+    async def awrite_update(self, change: StateChange):
+        """Write one update of a state to the store."""
         ...
 
     async def is_cought_up_to(self, revision: int) -> bool:
