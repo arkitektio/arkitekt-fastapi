@@ -7,14 +7,14 @@ rather than at the first assignment.
 """
 
 import pytest
+from arkitekt_spec.declare.app import AppRegistry
+from arkitekt_spec.declare.errors import RegistryFrozenError
+from arkitekt_spec.declare.structures.errors import StructureRegistryError
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from arkitekt_spec.declare.app import AppRegistry
 from arkitekt_fastapi.routes import configure_fastapi
 from arkitekt_fastapi.testing import AsyncAgentTestClient
-from arkitekt_spec.declare.errors import RegistryFrozenError
-from arkitekt_spec.declare.structures.errors import StructureRegistryError
 
 
 @pytest.mark.asyncio
@@ -23,7 +23,9 @@ async def test_the_agent_serves_a_frozen_copy_and_the_declaration_stays_open(
 ) -> None:
     registry = AppRegistry()
     app = FastAPI()
-    agent = configure_fastapi(app=app, app_registry=registry, db_file=str(tmp_path / "a.db"))
+    agent = configure_fastapi(
+        app=app, app_registry=registry, db_file=str(tmp_path / "a.db")
+    )
 
     # Declared after configuring, before starting: still served.
     @registry.register
@@ -36,6 +38,7 @@ async def test_the_agent_serves_a_frozen_copy_and_the_declaration_stays_open(
         served = agent.app_registry
         assert served is not registry
         assert "double" in served.implementations
+
         def later(y: int) -> int:
             """Declared too late: the run serves what was declared when it started."""
             return y
@@ -96,7 +99,11 @@ def test_without_a_lifespan_the_caller_owns_the_agent(tmp_path) -> None:  # noqa
 
     bound = Bound()
     agent = configure_fastapi(
-        app=app, app_registry=snapshot, db_file=str(tmp_path / "c.db"), bound_app=bound, lifespan=False
+        app=app,
+        app_registry=snapshot,
+        db_file=str(tmp_path / "c.db"),
+        bound_app=bound,
+        lifespan=False,
     )
 
     assert agent.app_registry is snapshot and agent.bound_app is bound

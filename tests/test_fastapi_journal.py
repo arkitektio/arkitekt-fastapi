@@ -14,11 +14,11 @@ from typing import Any
 
 import anyio
 import pytest
+from arkitekt_spec.declare.app import AppRegistry
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from starlette.testclient import WebSocketTestSession
 
-from arkitekt_spec.declare.app import AppRegistry
 from arkitekt_fastapi.agent import FastApiAgent
 from arkitekt_fastapi.routes import configure_fastapi
 
@@ -75,7 +75,9 @@ def _registry(spun: threading.Event) -> AppRegistry:
 
 
 @pytest.fixture()
-def served(tmp_path: Path) -> Iterator[tuple[TestClient, FastApiAgent, threading.Event]]:
+def served(
+    tmp_path: Path,
+) -> Iterator[tuple[TestClient, FastApiAgent, threading.Event]]:
     spun = threading.Event()
     app = FastAPI()
     agent = configure_fastapi(app, _registry(spun), db_file=str(tmp_path / "agent.db"))
@@ -187,12 +189,22 @@ def test_one_order_for_tasks_and_state_and_replay_at_any_position(served) -> Non
 
         # The legacy subscriber gets the frames it always got: no ASSIGN, no positions.
         legacy_frames = until_terminal(legacy, task)
-        assert kinds(legacy_frames) == ["STARTED", "PROGRESS", "LOCK", "STATE_UPDATE", "YIELD", "COMPLETED", "UNLOCK"]
+        assert kinds(legacy_frames) == [
+            "STARTED",
+            "PROGRESS",
+            "LOCK",
+            "STATE_UPDATE",
+            "YIELD",
+            "COMPLETED",
+            "UNLOCK",
+        ]
         assert all("pos" not in f and "journal_session" not in f for f in legacy_frames)
         assert [f["id"] for f in legacy_frames] == [f["id"] for f in frames[1:]], (
             "the same messages, with the same ids"
         )
-        assert [f.get("seq") for f in legacy_frames] == [f.get("seq") for f in frames[1:]]
+        assert [f.get("seq") for f in legacy_frames] == [
+            f.get("seq") for f in frames[1:]
+        ]
         for plain, stamped in zip(legacy_frames, frames[1:]):
             assert {
                 k: v
@@ -211,7 +223,11 @@ def test_one_order_for_tasks_and_state_and_replay_at_any_position(served) -> Non
         assert entries[0]["kind"] == "SESSION_INIT"
         assert (entries[8]["kind"], entries[8]["task_id"]) == ("UNLOCK", task)
         assert listing["last_pos"] == 9
-        assert client.get("/journal").json() == {"session_id": session, "pos": 9, "global_rev": 1}
+        assert client.get("/journal").json() == {
+            "session_id": session,
+            "pos": 9,
+            "global_rev": 1,
+        }
 
         # Time travel: before the patch, between the end and the unlock, after.
         lock_pos, done_pos = frames[3]["pos"], frames[6]["pos"]
@@ -232,9 +248,17 @@ def test_one_order_for_tasks_and_state_and_replay_at_any_position(served) -> Non
         assert client.get(f"/journal/{session}/at/99").status_code == 404
 
         now = int(time.time() * 1000) + 1000
-        assert client.get(f"/journal/{session}/at?timestamp={now}").json()["pos"] == done_pos + 1
+        assert (
+            client.get(f"/journal/{session}/at?timestamp={now}").json()["pos"]
+            == done_pos + 1
+        )
         assert client.get(f"/journal/{session}/at?timestamp=nope").status_code == 422
-        assert client.get(f"/journal/{session}/at?timestamp=2000-01-01T00:00:00Z").status_code == 404
+        assert (
+            client.get(
+                f"/journal/{session}/at?timestamp=2000-01-01T00:00:00Z"
+            ).status_code
+            == 404
+        )
 
         events = client.get(f"/tasks/{task}/events").json()
         assert events["task"]["status"] == "COMPLETED"
@@ -253,9 +277,18 @@ def test_one_order_for_tasks_and_state_and_replay_at_any_position(served) -> Non
         assert client.get("/session_info").json()["current_pos"] == 9
 
         # Key filters route like the websocket.
-        only_locks = client.get("/journal/current", params={"lock_keys": "camera", "action_keys": "none", "state_keys": "none"}).json()
-        assert [e["kind"] for e in only_locks["entries"]] == ["SESSION_INIT", "LOCK", "UNLOCK"]
-        patches = client.get("/journal/current", params={"kinds": "STATE_UPDATE"}).json()
+        only_locks = client.get(
+            "/journal/current",
+            params={"lock_keys": "camera", "action_keys": "none", "state_keys": "none"},
+        ).json()
+        assert [e["kind"] for e in only_locks["entries"]] == [
+            "SESSION_INIT",
+            "LOCK",
+            "UNLOCK",
+        ]
+        patches = client.get(
+            "/journal/current", params={"kinds": "STATE_UPDATE"}
+        ).json()
         assert [e["kind"] for e in patches["entries"]] == ["STATE_UPDATE"]
         page = client.get("/journal/current", params={"after": 2, "limit": 2}).json()
         assert [e["pos"] for e in page["entries"]] == [3, 4]
@@ -301,7 +334,9 @@ def test_delivery_order_is_journal_order_under_concurrency(served) -> None:  # n
 
         # Per task: ASSIGN first, the end last but for its UNLOCKs.
         for task in ids:
-            own = [f for f in frames if f.get("task") == task or f.get("task_id") == task]
+            own = [
+                f for f in frames if f.get("task") == task or f.get("task_id") == task
+            ]
             assert own[0]["type"] == "ASSIGN"
             end = next(i for i, f in enumerate(own) if f["type"] == "COMPLETED")
             assert all(f["type"] == "UNLOCK" for f in own[end + 1 :]), (
@@ -312,7 +347,9 @@ def test_delivery_order_is_journal_order_under_concurrency(served) -> None:  # n
             # A task's patches come before its YIELD.
             kinds_of_task = kinds(own)
             if "STATE_UPDATE" in kinds_of_task:
-                assert kinds_of_task.index("STATE_UPDATE") < kinds_of_task.index("YIELD")
+                assert kinds_of_task.index("STATE_UPDATE") < kinds_of_task.index(
+                    "YIELD"
+                )
         revs = [f["global_rev"] for f in frames if f["type"] == "STATE_UPDATE"]
         assert revs == list(range(1, len(revs) + 1))
     finally:
@@ -342,7 +379,8 @@ def test_resume_after_a_disconnect(served) -> None:  # noqa: ANN001
     assert watermark is not None
 
     ws, init = connect(
-        client, {"type": "INIT", "journal": True, "resume_after": last, "session_id": session}
+        client,
+        {"type": "INIT", "journal": True, "resume_after": last, "session_id": session},
     )
     try:
         assert init["journal"]["resync"] is False
@@ -365,7 +403,8 @@ def test_resume_after_a_disconnect(served) -> None:  # noqa: ANN001
 
     # Another session's position cannot be resumed.
     ws, init = connect(
-        client, {"type": "INIT", "journal": True, "resume_after": 1, "session_id": "elsewhere"}
+        client,
+        {"type": "INIT", "journal": True, "resume_after": 1, "session_id": "elsewhere"},
     )
     ws.__exit__(None, None, None)
     assert init["journal"]["resync"] is True
@@ -381,7 +420,12 @@ def test_resume_after_a_disconnect(served) -> None:  # noqa: ANN001
     # Nor one ahead of the watermark.
     ws, init = connect(
         client,
-        {"type": "INIT", "journal": True, "resume_after": 10_000, "session_id": session},
+        {
+            "type": "INIT",
+            "journal": True,
+            "resume_after": 10_000,
+            "session_id": session,
+        },
     )
     ws.__exit__(None, None, None)
     assert init["journal"]["resync"] is True
@@ -416,7 +460,13 @@ def test_resume_from_storage_beyond_memory(served) -> None:  # noqa: ANN001
 
     # Filters apply to the backlog too.
     ws, init = connect(
-        client, {"type": "INIT", "journal": True, "resume_after": 0, "action_keys": ["nothing"]}
+        client,
+        {
+            "type": "INIT",
+            "journal": True,
+            "resume_after": 0,
+            "action_keys": ["nothing"],
+        },
     )
     try:
         backlog = drain(ws)
@@ -481,7 +531,9 @@ def test_the_world_at_a_position_counts_every_patch_once(served) -> None:  # noq
         assert at["states"]["CameraState"] == live
         with agent.journal.locked() as view:
             assert view.fold.states["CameraState"] == live
-        snapshots = client.get("/journal/current", params={"kinds": "STATE_SNAPSHOT"}).json()
+        snapshots = client.get(
+            "/journal/current", params={"kinds": "STATE_SNAPSHOT"}
+        ).json()
         assert [e["global_rev"] for e in snapshots["entries"]] == [2, 4]
     finally:
         ws.__exit__(None, None, None)

@@ -1,7 +1,6 @@
 """FastAPI route orchestration for the FastAPI runtime."""
 
 from __future__ import annotations
-from arkitekt_spec.actions import StateImplementationInput
 
 import asyncio
 import contextlib
@@ -9,10 +8,12 @@ import logging
 from collections.abc import AsyncIterator, Callable
 from typing import Any
 
+from arkitekt_spec.actions import StateImplementationInput
+from arkitekt_spec.declare.app import AppRegistry
 from fastapi import APIRouter, FastAPI, Request
 
-from arkitekt_spec.declare.app import AppRegistry
 from arkitekt_fastapi.agent import FastApiAgent
+from arkitekt_fastapi.auth import ExpandUserFromRequest
 from arkitekt_fastapi.detail_routes import (
     build_state_detail_router,
     build_task_detail_router,
@@ -34,7 +35,6 @@ from arkitekt_fastapi.route_groups import (
     build_state_router,
     build_task_router,
 )
-from arkitekt_fastapi.auth import ExpandUserFromRequest
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ def _include_router(app: FastAPI, router: APIRouter) -> None:
     register_router_custom_schemas(app, router)
 
 
-def _log_provide_task_failure(task: "asyncio.Task[None]") -> None:
+def _log_provide_task_failure(task: asyncio.Task[None]) -> None:
     if task.cancelled():
         return
     exc = task.exception()

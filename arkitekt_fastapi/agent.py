@@ -18,6 +18,7 @@ import json
 import logging
 import time
 import uuid
+from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass
 from types import TracebackType
 from typing import (
@@ -25,13 +26,9 @@ from typing import (
     ClassVar,
     Self,
 )
-from collections.abc import AsyncIterator, Awaitable, Callable
-from fastapi import WebSocket, WebSocketDisconnect
-from pydantic import ConfigDict, Field, PrivateAttr
 
 from arkitekt_runtime import messages
-from arkitekt_spec.actions import StateImplementationInput
-from arkitekt_runtime.types import AssignInput
+from arkitekt_runtime.agents.backend import LocalAgentBackend
 from arkitekt_runtime.agents.base import BaseAgent
 from arkitekt_runtime.agents.dataclasses import QueuedAssign, RevisedState
 from arkitekt_runtime.agents.journal import (
@@ -42,12 +39,11 @@ from arkitekt_runtime.agents.journal import (
     Route,
 )
 from arkitekt_runtime.agents.transport.base import AgentTransport
-from arkitekt_runtime.agents.backend import LocalAgentBackend
-from arkitekt_fastapi.sink.backend import SinkAgentBackend
-from arkitekt_fastapi.retriever.memory_retriever import MemoryRetriever
-from arkitekt_fastapi.retriever.protocol import StateRetriever
-from arkitekt_fastapi.sink.memory_sink import MemorySink
-from arkitekt_fastapi.sink.protocol import StateChange, StateSink
+from arkitekt_runtime.types import AssignInput
+from arkitekt_spec.actions import StateImplementationInput
+from fastapi import WebSocket, WebSocketDisconnect
+from pydantic import ConfigDict, Field, PrivateAttr
+
 from arkitekt_fastapi.auth import (
     AuthenticationError,
     ExpandUserFromRequest,
@@ -60,6 +56,11 @@ from arkitekt_fastapi.models import (
     TaskView,
     WebSocketSubscriptionInit,
 )
+from arkitekt_fastapi.retriever.memory_retriever import MemoryRetriever
+from arkitekt_fastapi.retriever.protocol import StateRetriever
+from arkitekt_fastapi.sink.backend import SinkAgentBackend
+from arkitekt_fastapi.sink.memory_sink import MemorySink
+from arkitekt_fastapi.sink.protocol import StateChange, StateSink
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +147,6 @@ class _JournalSubscriber:
     def __init__(self, subscriptions: _WebSocketSubscriptions) -> None:
         self.subscriptions = subscriptions
         self.frames: asyncio.Queue[str] = asyncio.Queue()
-
 
 
 @dataclass
@@ -535,7 +535,9 @@ class FastApiTransport(AgentTransport):
             else:
                 await self.connection_manager.disconnect(websocket)
 
-    async def _apump(self, websocket: WebSocket, subscriber: _JournalSubscriber) -> None:
+    async def _apump(
+        self, websocket: WebSocket, subscriber: _JournalSubscriber
+    ) -> None:
         """Send a journal subscriber's frames, in order, until the socket goes away."""
         try:
             while True:
@@ -764,7 +766,9 @@ class FastApiAgent(BaseAgent):
             watermark = view.watermark
             recent = (
                 view.recent(after, watermark.pos)
-                if watermark is not None and after is not None and after <= watermark.pos
+                if watermark is not None
+                and after is not None
+                and after <= watermark.pos
                 else None
             )
             self.transport.add_journal_subscriber(subscriber)
@@ -797,7 +801,8 @@ class FastApiAgent(BaseAgent):
                     )
                 except Exception:
                     logger.error(
-                        "Could not read the journal to resume a subscriber", exc_info=True
+                        "Could not read the journal to resume a subscriber",
+                        exc_info=True,
                     )
         backlog = [entry for entry in backlog if subscriptions.admits(entry.route())]
 
@@ -964,7 +969,9 @@ class FastApiAgent(BaseAgent):
                 state_name=update.state,
                 global_rev=update.global_rev,
                 # The frame leaves both to its journal stamp.
-                session_id=entry.session_id if entry is not None else self.current_session,
+                session_id=entry.session_id
+                if entry is not None
+                else self.current_session,
                 ts=entry.event_time / 1000 if entry is not None else time.time(),
                 task_id=update.task,
                 ops=[op.model_dump(mode="json") for op in update.ops],
@@ -1044,7 +1051,9 @@ class FastApiAgent(BaseAgent):
         if isinstance(self.backend, SinkAgentBackend):
             # The session records what the agent implements and its states (the latter
             # exist only once started).
-            self.backend.implementations = list(self.app_registry.implementations.values())
+            self.backend.implementations = list(
+                self.app_registry.implementations.values()
+            )
             self.backend.states = list(self.states.values())
         # The baseline snapshot reaches the sink through apublish_session_init below,
         # which super().astart() triggers once states are initialized. (This used to dump
@@ -1058,7 +1067,9 @@ class FastApiAgent(BaseAgent):
             # An agent that never started persisted nothing to catch up on.
             await self._await_persistence_caught_up()
         await self._journal.aclose(
-            self.sink_catch_up_timeout if self.sink_catch_up_timeout is not None else FLUSH_TIMEOUT
+            self.sink_catch_up_timeout
+            if self.sink_catch_up_timeout is not None
+            else FLUSH_TIMEOUT
         )
         await self.sink.ateardown()
         await self.retriever.ateardown()

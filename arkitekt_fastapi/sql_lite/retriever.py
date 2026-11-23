@@ -1,9 +1,9 @@
-import aiosqlite
 import json
 from collections.abc import Sequence
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any
 
+import aiosqlite
 from arkitekt_runtime.agents.journal import Fold, JournalEntry
 
 from arkitekt_fastapi.retriever.protocol import (
@@ -353,7 +353,13 @@ class SQLLiteRetriever:
         patch_document = build_patch_document(
             json.loads(ops)
             if ops is not None
-            else [{"op": op, "path": path, "value": json.loads(value) if value is not None else None}]
+            else [
+                {
+                    "op": op,
+                    "path": path,
+                    "value": json.loads(value) if value is not None else None,
+                }
+            ]
         )
 
         return PatchEvent(
@@ -466,9 +472,7 @@ class SQLLiteRetriever:
         return None
 
 
-JOURNAL_COLUMNS = (
-    "session_id, pos, global_rev, event_time, kind, task_id, action_key, subject, message_id, payload, step"
-)
+JOURNAL_COLUMNS = "session_id, pos, global_rev, event_time, kind, task_id, action_key, subject, message_id, payload, step"
 #: Kinds that belong to the whole session rather than to a task, state or lock.
 SESSION_KINDS = "'SESSION_INIT', 'STATE_SNAPSHOT'"
 #: Kinds that carry state values.

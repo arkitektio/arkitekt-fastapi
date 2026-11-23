@@ -2,20 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any
 from collections.abc import Callable
+from typing import Any
 
+from arkitekt_spec.actions import ImplementationInput
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
+from arkitekt_fastapi.agent import FastApiAgent
 from arkitekt_fastapi.auth import (
     ExpandUserFromRequest,
     expand_http_user_or_401,
     resolve_expand_user_from_request,
 )
-
-from arkitekt_spec.actions import ImplementationInput
-from arkitekt_fastapi.agent import FastApiAgent
 from arkitekt_fastapi.openapi_utils import (
     create_json_schema_from_ports,
 )
@@ -130,7 +129,9 @@ def build_implementation_router(
 ) -> APIRouter:
     """Build routes for all static implementations."""
     expand_user = (
-        resolve_expand_user_from_request(expand_user_from_request, get_user_from_request)
+        resolve_expand_user_from_request(
+            expand_user_from_request, get_user_from_request
+        )
         if expand_user_from_request is not None or get_user_from_request is not None
         else None
     )

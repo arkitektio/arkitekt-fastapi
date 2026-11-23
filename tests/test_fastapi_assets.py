@@ -8,10 +8,10 @@ them by (``@self.assets.<name>``).
 import hashlib
 from pathlib import Path
 
+from arkitekt_spec.declare.app import AppRegistry
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from arkitekt_spec.declare.app import AppRegistry
 from arkitekt_fastapi.routes import configure_fastapi
 
 PNG = b"\x89PNG\r\n\x1a\n" + b"pixels" * 20

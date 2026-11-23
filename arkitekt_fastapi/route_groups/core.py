@@ -1,22 +1,23 @@
 """Core agent command and websocket route builders."""
 
 from __future__ import annotations
-from typing import Any
+
 from collections.abc import Callable
+from typing import Any
 
-from fastapi import APIRouter, Request, WebSocket
-
-from arkitekt_fastapi.auth import (
-    ExpandUserFromRequest,
-    expand_http_user_or_401,
-)
 from arkitekt_runtime.messages import Cancel, Pause, Resume
 from arkitekt_runtime.types import (
     CancelInput,
     PauseInput,
     ResumeInput,
 )
+from fastapi import APIRouter, Request, WebSocket
+
 from arkitekt_fastapi.agent import FastApiAgent
+from arkitekt_fastapi.auth import (
+    ExpandUserFromRequest,
+    expand_http_user_or_401,
+)
 
 
 def build_core_router(

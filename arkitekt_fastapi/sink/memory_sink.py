@@ -4,8 +4,9 @@ from dataclasses import dataclass, field
 
 from arkitekt_runtime import messages
 from arkitekt_runtime.agents.journal import JournalEntry
-from arkitekt_fastapi.sink.protocol import StateChange
 from arkitekt_spec.declare.protocol.types import AnyState
+
+from arkitekt_fastapi.sink.protocol import StateChange
 
 
 @dataclass

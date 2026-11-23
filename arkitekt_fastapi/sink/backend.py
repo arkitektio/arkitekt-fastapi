@@ -5,11 +5,10 @@ that owns sessions. This is that difference expressed as a backend rather than a
 ``BaseAgent`` overrides.
 """
 
-
+from arkitekt_spec.declare.protocol.types import AnyState
 from pydantic import BaseModel, ConfigDict, Field
 
 from arkitekt_fastapi.sink.protocol import StateSink
-from arkitekt_spec.declare.protocol.types import AnyState
 
 
 class SinkAgentBackend(BaseModel):

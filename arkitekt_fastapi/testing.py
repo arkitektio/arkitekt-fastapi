@@ -9,16 +9,15 @@ import contextlib
 import json
 import threading
 import time
+from collections.abc import Callable, Generator
 from dataclasses import dataclass
 from typing import Any
-from collections.abc import Callable, Generator
 
+from arkitekt_spec.declare.app import AppRegistry
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from httpx import ASGITransport, AsyncClient
 from starlette.testclient import WebSocketTestSession
-
-from arkitekt_spec.declare.app import AppRegistry
 
 from .agent import FastApiAgent
 
@@ -960,6 +959,7 @@ def create_test_app_and_agent(
         The agent routes (task/state/lock websockets and task commands) are added immediately.
     """
     from arkitekt_spec.declare.app import AppRegistry
+
     from arkitekt_fastapi.routes import configure_fastapi
 
     app_registry = app_registry or AppRegistry()

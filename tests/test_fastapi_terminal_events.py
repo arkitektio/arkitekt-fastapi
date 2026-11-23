@@ -6,13 +6,13 @@ subscribers by looking the assignment up. Pruning *before* the send made every
 COMPLETED/ERROR unroutable: clients saw PROGRESS and YIELD but never the end.
 """
 
-from pathlib import Path
 from collections.abc import Generator
+from pathlib import Path
 
 import pytest
+from arkitekt_spec.declare.app import AppRegistry
 from fastapi import FastAPI
 
-from arkitekt_spec.declare.app import AppRegistry
 from arkitekt_fastapi.routes import configure_fastapi
 from arkitekt_fastapi.testing import AsyncAgentTestClient
 
@@ -37,7 +37,9 @@ def _build_app(tmp_path: Path) -> FastAPI:
 
 
 @pytest.mark.asyncio
-async def test_a_completed_task_delivers_completed_over_the_websocket(tmp_path: Path) -> None:
+async def test_a_completed_task_delivers_completed_over_the_websocket(
+    tmp_path: Path,
+) -> None:
     async with AsyncAgentTestClient(_build_app(tmp_path), as_user="tester") as client:
         result = await client.assign("count_up", {"until": 2})
         events = await client.collect_until_done(result.task_id, timeout=5)
@@ -48,7 +50,9 @@ async def test_a_completed_task_delivers_completed_over_the_websocket(tmp_path: 
 
 
 @pytest.mark.asyncio
-async def test_a_raising_task_delivers_critical_over_the_websocket(tmp_path: Path) -> None:
+async def test_a_raising_task_delivers_critical_over_the_websocket(
+    tmp_path: Path,
+) -> None:
     async with AsyncAgentTestClient(_build_app(tmp_path), as_user="tester") as client:
         result = await client.assign("explode", {})
         events = await client.collect_until_error(result.task_id, timeout=5)

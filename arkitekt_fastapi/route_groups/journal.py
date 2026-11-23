@@ -8,10 +8,10 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
+from arkitekt_runtime.agents.journal import FLUSH_TIMEOUT, Fold, JournalReader
 from fastapi import APIRouter, Path, Query
 from fastapi.responses import JSONResponse
 
-from arkitekt_runtime.agents.journal import FLUSH_TIMEOUT, Fold, JournalReader
 from arkitekt_fastapi.agent import FastApiAgent
 
 from .common import normalize_filter_values

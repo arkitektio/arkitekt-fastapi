@@ -6,10 +6,9 @@ import hashlib
 import logging
 from pathlib import Path
 
+from arkitekt_spec.declare.app import AssetDeclaration
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse, RedirectResponse, Response
-
-from arkitekt_spec.declare.app import AssetDeclaration
 
 from arkitekt_fastapi.agent import FastApiAgent
 
@@ -75,7 +74,9 @@ def build_asset_router(
     async def get_asset(name: str, request: Request) -> Response:
         asset = assets.get(name)
         if asset is None:
-            raise HTTPException(status_code=404, detail=f"No asset is registered as '{name}'")
+            raise HTTPException(
+                status_code=404, detail=f"No asset is registered as '{name}'"
+            )
         if asset.path is None:
             return RedirectResponse(str(asset.source), status_code=307)
         if name in changed or not _same_size(asset, asset.path):

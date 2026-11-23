@@ -2,16 +2,13 @@
 
 from typing import Any
 
-from fastapi import FastAPI
-from fastapi import APIRouter
-from fastapi.openapi.utils import get_openapi
-
 from arkitekt_spec.actions import (
     ArgPortInput,
     PortKind,
     ReturnPortInput,
 )
-
+from fastapi import APIRouter, FastAPI
+from fastapi.openapi.utils import get_openapi
 
 CUSTOM_SCHEMAS_STATE_KEY = "rekuest_custom_schemas"
 

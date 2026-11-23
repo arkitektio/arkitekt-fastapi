@@ -1,15 +1,16 @@
 import asyncio
-import aiosqlite
 import json
 import uuid
 from collections.abc import Sequence
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
+import aiosqlite
 from arkitekt_runtime import messages
 from arkitekt_runtime.agents.journal import JournalEntry
+from arkitekt_spec.declare.protocol.types import AnyState
+
 from arkitekt_fastapi.sink.protocol import StateChange
 from arkitekt_fastapi.sql_lite.schema import ensure_sqlite_schema
-from arkitekt_spec.declare.protocol.types import AnyState
 
 
 # 2. Helpers

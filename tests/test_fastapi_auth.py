@@ -9,11 +9,11 @@ from the init payload it already sends after connecting.
 from typing import Any
 
 import pytest
+from arkitekt_spec.declare.app import AppRegistry
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
-from arkitekt_spec.declare.app import AppRegistry
 from arkitekt_fastapi.agent import FastApiAgent
 from arkitekt_fastapi.auth import (
     AuthenticationError,
@@ -127,12 +127,12 @@ def test_task_control_routes_are_authenticated(path: str) -> None:
 
 
 def _implementation_app(**kwargs: Any) -> tuple[FastAPI, list[Any]]:
+    from arkitekt_spec.actions import ImplementationInput
+    from arkitekt_spec.declare.definition.define import prepare_definition
+    from arkitekt_spec.declare.structures.registry import StructureRegistry
     from fastapi import APIRouter
 
     from arkitekt_fastapi.route_groups import add_implementation_route
-    from arkitekt_spec.declare.definition.define import prepare_definition
-    from arkitekt_spec.actions import ImplementationInput
-    from arkitekt_spec.declare.structures.registry import StructureRegistry
 
     def echo(item: str) -> str:
         """Echo"""

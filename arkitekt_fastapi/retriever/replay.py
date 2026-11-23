@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import copy
+from collections.abc import Iterable
 from datetime import datetime
 from typing import cast
-from collections.abc import Iterable
 
 import jsonpatch  # type: ignore[import-untyped]
+from arkitekt_runtime.messages import JSONSerializable
 
 from arkitekt_fastapi.retriever.protocol import (
     PatchEvent,
@@ -15,7 +16,6 @@ from arkitekt_fastapi.retriever.protocol import (
     Snapshot,
     TaskBoundary,
 )
-from arkitekt_runtime.messages import JSONSerializable
 
 
 def build_patch_operation(
@@ -28,10 +28,14 @@ def build_patch_operation(
     return operation
 
 
-def build_patch_document(ops: Iterable[dict[str, JSONSerializable]]) -> list[JSONSerializable]:
+def build_patch_document(
+    ops: Iterable[dict[str, JSONSerializable]],
+) -> list[JSONSerializable]:
     """An update as an RFC-6902 patch document: its operations, in order."""
     return [
-        build_patch_operation(str(op.get("op") or ""), str(op.get("path") or ""), op.get("value"))
+        build_patch_operation(
+            str(op.get("op") or ""), str(op.get("path") or ""), op.get("value")
+        )
         for op in ops
     ]
 

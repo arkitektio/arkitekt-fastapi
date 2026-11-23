@@ -24,8 +24,8 @@ Rejection is signalled by raising `AuthenticationError`. The transport decides h
 surface it: HTTP answers `401`, the websocket closes with code `1008`.
 """
 
-from typing import Any
 from collections.abc import Callable
+from typing import Any
 
 from fastapi import HTTPException, Request
 

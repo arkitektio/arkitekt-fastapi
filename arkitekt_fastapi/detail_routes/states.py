@@ -2,22 +2,9 @@
 
 from __future__ import annotations
 
+from arkitekt_spec.actions import StateImplementationInput
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import JSONResponse
-
-from arkitekt_spec.actions import StateImplementationInput
-from arkitekt_fastapi.retriever.protocol import (
-    PatchEvent as RetrieverPatchEvent,
-)
-from arkitekt_fastapi.retriever.protocol import (
-    SessionBoundary as RetrieverSessionBoundary,
-)
-from arkitekt_fastapi.retriever.protocol import (
-    Snapshot as RetrieverSnapshot,
-)
-from arkitekt_fastapi.retriever.protocol import (
-    TaskBoundary as RetrieverTaskBoundary,
-)
 
 from arkitekt_fastapi.agent import FastApiAgent
 from arkitekt_fastapi.models import (
@@ -30,6 +17,18 @@ from arkitekt_fastapi.models import (
     StateSegmentsResponse,
 )
 from arkitekt_fastapi.openapi_utils import create_json_schema_from_ports
+from arkitekt_fastapi.retriever.protocol import (
+    PatchEvent as RetrieverPatchEvent,
+)
+from arkitekt_fastapi.retriever.protocol import (
+    SessionBoundary as RetrieverSessionBoundary,
+)
+from arkitekt_fastapi.retriever.protocol import (
+    Snapshot as RetrieverSnapshot,
+)
+from arkitekt_fastapi.retriever.protocol import (
+    TaskBoundary as RetrieverTaskBoundary,
+)
 from arkitekt_fastapi.route_groups.common import normalize_filter_values
 
 

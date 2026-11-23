@@ -3,7 +3,6 @@
 The served journal end to end is ``test_fastapi_journal``.
 """
 
-
 import pytest
 from arkitekt_runtime import messages
 from arkitekt_runtime.agents.journal import (
@@ -13,10 +12,18 @@ from arkitekt_runtime.agents.journal import (
 
 
 def _session_init(session: str) -> messages.SessionInit:
-    return messages.SessionInit(session_id=session, states={"Camera": {"exposure": 1, "tags": []}})
+    return messages.SessionInit(
+        session_id=session, states={"Camera": {"exposure": 1, "tags": []}}
+    )
 
 
-def _patch(rev: int, task: str | None, op: str = "replace", path: str = "/exposure", value: object = None) -> messages.StatePatch:
+def _patch(
+    rev: int,
+    task: str | None,
+    op: str = "replace",
+    path: str = "/exposure",
+    value: object = None,
+) -> messages.StatePatch:
     return messages.StatePatch(
         session_id="s",
         global_rev=rev,
@@ -53,14 +60,18 @@ def _scenario() -> tuple[list[JournalEntry], Journal]:
     journal.add_listener(lambda entry, message: recorded.append(entry))
     journal.append(_session_init("s"))
     journal.record_assign(_assign("t"), "set")
-    journal.record_assign(_assign("u").model_copy(update={"interface": "other"}), "other")
+    journal.record_assign(
+        _assign("u").model_copy(update={"interface": "other"}), "other"
+    )
     journal.append(messages.Progress(task="t", progress=5), "set")
     journal.append(messages.Lock(key="cam", task="t"))
     journal.append(_patch(1, "t", op="add", path="/tags/-", value="a"))
     journal.append(messages.Log(task="u", message="hi"), "other")
     journal.append(
         messages.StateSnapshot(
-            session_id="s", global_rev=2, snapshots={"Camera": {"exposure": 1, "tags": ["a", "b"]}}
+            session_id="s",
+            global_rev=2,
+            snapshots={"Camera": {"exposure": 1, "tags": ["a", "b"]}},
         )
     )
     journal.append(_patch(2, "t", op="add", path="/tags/-", value="b"))
@@ -126,11 +137,15 @@ async def test_the_memory_and_sqlite_journals_answer_alike(tmp_path) -> None:  #
     assert dump(await memory.aget_journal_task_entries("t")) == dump(
         await sqlite.aget_journal_task_entries("t")
     )
-    assert [e.session_id for e in await sqlite.aget_journal_task_entries("t")][-1] == "s2"
+    assert [e.session_id for e in await sqlite.aget_journal_task_entries("t")][
+        -1
+    ] == "s2"
 
     last = entries[-3]  # the last entry of session "s"
     for ms in (0, entries[0].event_time, last.event_time + 1):
-        assert await memory.aget_journal_pos_at_time("s", ms) == await sqlite.aget_journal_pos_at_time("s", ms)
+        assert await memory.aget_journal_pos_at_time(
+            "s", ms
+        ) == await sqlite.aget_journal_pos_at_time("s", ms)
     assert await sqlite.aget_journal_pos_at_time("s", last.event_time + 1) == last.pos
 
     for pos in range(1, last.pos + 2):
@@ -144,7 +159,11 @@ async def test_the_memory_and_sqlite_journals_answer_alike(tmp_path) -> None:  #
         assert in_memory[1].world() == stored[1].world(), pos
 
     _, world = await sqlite.aget_journal_world("s", last.pos)  # type: ignore[misc]
-    assert world.states["Camera"]["tags"] == ["a", "b"], "the snapshot's patch counts once"
+    assert world.states["Camera"]["tags"] == ["a", "b"], (
+        "the snapshot's patch counts once"
+    )
     assert world.locks == {}
-    assert world.tasks["t"].status == "COMPLETED" and world.tasks["u"].status == "FAILED"
+    assert (
+        world.tasks["t"].status == "COMPLETED" and world.tasks["u"].status == "FAILED"
+    )
     assert world.tasks["u"].interface == "other"

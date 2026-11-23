@@ -1,8 +1,16 @@
 import copy
-from datetime import datetime, UTC
 from collections.abc import Callable, Sequence
+from datetime import UTC, datetime
 
 from arkitekt_runtime import messages
+from arkitekt_runtime.agents.journal import (
+    Fold,
+    JournalEntry,
+    entry_matches,
+    world_from_entries,
+)
+from arkitekt_runtime.messages import JSONSerializable
+
 from arkitekt_fastapi.retriever.protocol import (
     PatchEvent,
     SessionBoundary,
@@ -15,10 +23,8 @@ from arkitekt_fastapi.retriever.replay import (
     merge_state_ids,
     replay,
 )
-from arkitekt_runtime.agents.journal import Fold, JournalEntry, entry_matches, world_from_entries
 from arkitekt_fastapi.sink.memory_sink import MemoryStore
 from arkitekt_fastapi.sink.protocol import StateChange
-from arkitekt_runtime.messages import JSONSerializable
 
 
 class MemoryRetriever:

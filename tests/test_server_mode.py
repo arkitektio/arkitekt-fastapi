@@ -7,12 +7,12 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from arkitekt_spec.declare.app import AppRegistry
+from arkitekt_spec.declare.task import Task
 from fastapi import FastAPI
 
 from arkitekt_fastapi.routes import configure_fastapi
 from arkitekt_fastapi.testing import AsyncAgentTestClient
-from arkitekt_spec.declare.app import AppRegistry
-from arkitekt_spec.declare.task import Task
 
 DISTRIBUTED = {"rekuest", "rath", "websockets", "graphql", "fakts"}
 
@@ -24,7 +24,9 @@ def test_serving_loads_nothing_of_the_distributed_runtime() -> None:
         "arkitekt_fastapi.sql_lite.retriever; "
         "print(sorted({m.split('.')[0] for m in sys.modules}))"
     )
-    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
+    out = subprocess.run(
+        [sys.executable, "-c", code], capture_output=True, text=True, check=True
+    )
     assert not set(ast.literal_eval(out.stdout.strip())) & DISTRIBUTED
 
 
@@ -47,5 +49,7 @@ async def test_calling_another_action_fails_at_once(tmp_path: Path) -> None:
         result = await client.assign("calls_another", {})
         events = await client.collect_until_error(result.task_id, timeout=5)
 
-    assert events and events[-1].event_type == "CRITICAL", [e.event_type for e in events]
+    assert events and events[-1].event_type == "CRITICAL", [
+        e.event_type for e in events
+    ]
     assert "cannot call other actions" in events[-1].data["error"]

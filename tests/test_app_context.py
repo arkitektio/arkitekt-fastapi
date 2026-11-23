@@ -1,12 +1,12 @@
 """A served app refuses to start without the app context it declares."""
 
 import pytest
+from arkitekt_spec.declare.app import AppRegistry
+from arkitekt_spec.declare.errors import AppContextError
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from arkitekt_fastapi.routes import configure_fastapi
-from arkitekt_spec.declare.app import AppRegistry
-from arkitekt_spec.declare.errors import AppContextError
 
 
 class Config:

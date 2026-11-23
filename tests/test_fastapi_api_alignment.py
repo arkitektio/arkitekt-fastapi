@@ -1,6 +1,3 @@
-from fastapi import APIRouter, FastAPI
-from fastapi.testclient import TestClient
-
 from arkitekt_spec.actions import (
     ImplementationInput,
     PortKind,
@@ -8,15 +5,18 @@ from arkitekt_spec.actions import (
     StateDefinitionInput,
     StateImplementationInput,
 )
+from arkitekt_spec.declare.app import AppRegistry
+from arkitekt_spec.declare.definition.define import prepare_definition
+from arkitekt_spec.declare.structures.registry import StructureRegistry
+from fastapi import APIRouter, FastAPI
+from fastapi.testclient import TestClient
+
 from arkitekt_fastapi.agent import FastApiAgent
 from arkitekt_fastapi.route_groups.implementations import (
     add_implementation_route,
 )
 from arkitekt_fastapi.route_groups.schemas import build_schema_router
 from arkitekt_fastapi.routes import add_state_detail_routes
-from arkitekt_spec.declare.app import AppRegistry
-from arkitekt_spec.declare.definition.define import prepare_definition
-from arkitekt_spec.declare.structures.registry import StructureRegistry
 
 
 def test_fastapi_agent_build_assign_input_defaults_flags() -> None:
@@ -128,7 +128,11 @@ def test_schema_router_exposes_blok_implementation_inputs() -> None:
     app = FastAPI()
     agent = FastApiAgent()
     app_registry = AppRegistry()
-    app_registry.register_blok("demo_blok", '<Blok kind="agent" context="panel"><div /></Blok>', description="Demo blok")
+    app_registry.register_blok(
+        "demo_blok",
+        '<Blok kind="agent" context="panel"><div /></Blok>',
+        description="Demo blok",
+    )
     agent.app_registry = app_registry
 
     app.include_router(build_schema_router(agent))
@@ -209,7 +213,12 @@ def test_implementation_request_schema_advertises_only_what_assign_accepts() -> 
         if name.endswith("Request")
     )
 
-    samples = {"args": {"item": "hello"}, "reference": "ref", "capture": True, "step": True}
+    samples = {
+        "args": {"item": "hello"},
+        "reference": "ref",
+        "capture": True,
+        "step": True,
+    }
     assert set(request_schema["properties"]) == set(samples)
     assert request_schema["required"] == ["args"]
 

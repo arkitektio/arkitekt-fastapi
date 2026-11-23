@@ -5,6 +5,7 @@ registers with no server and cannot call other actions (``Task.call`` raises
 ``NoCallerError``).
 """
 
+from .agent import FastApiAgent, FastAPIConnectionManager, FastApiTransport
 from .auth import (
     AuthenticationError,
     ExpandUserFromRequest,
@@ -22,14 +23,12 @@ from .routes import (
     create_lifespan,
 )
 from .testing import (
-    AsyncAgentTestClient,
     AgentTestClient,
     AssignmentResult,
+    AsyncAgentTestClient,
     BufferedEvent,
     create_test_app_and_agent,
 )
-from .agent import FastAPIConnectionManager, FastApiAgent, FastApiTransport
-
 
 __all__ = [
     "AuthenticationError",
