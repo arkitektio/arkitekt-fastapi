@@ -21,14 +21,14 @@ class MemoryStore:
 class MemorySink:
     """In-memory sink that stores patches and snapshots as transport messages."""
 
-    def __init__(self, memory: MemoryStore | None = None):
+    def __init__(self, memory: MemoryStore | None = None) -> None:
         self.store = memory or MemoryStore()
         self._session_id: str | None = None
 
-    async def ainitialize(self):
+    async def ainitialize(self) -> None:
         return None
 
-    async def ateardown(self):
+    async def ateardown(self) -> None:
         return None
 
     async def acreate_session(
@@ -37,10 +37,10 @@ class MemorySink:
         self._session_id = str(uuid.uuid4())
         return self._session_id
 
-    async def adump_snapshot(self, snapshot: messages.StateSnapshot):
+    async def adump_snapshot(self, snapshot: messages.StateSnapshot) -> None:
         self.store.snapshots.append(snapshot)
 
-    async def awrite_update(self, change: StateChange):
+    async def awrite_update(self, change: StateChange) -> None:
         self.store.patches.append(change)
 
     async def awrite_journal(self, entries: Sequence[JournalEntry]) -> None:

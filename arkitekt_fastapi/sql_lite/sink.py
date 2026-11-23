@@ -122,7 +122,7 @@ class SQLLiteSink:
                 except aiosqlite.IntegrityError as e:
                     raise RuntimeError(
                         f"Database Integrity Violation on patch {global_current_rev}->{global_future_rev}: {e}"
-                    )
+                    ) from e
 
     async def awrite_journal(self, entries: Sequence[JournalEntry]) -> None:
         """Persist journal entries in one transaction. A re-sent entry is a no-op."""
@@ -158,7 +158,7 @@ class SQLLiteSink:
                 )
                 await db.commit()
 
-    async def ateardown(self):
+    async def ateardown(self) -> None:
         """Cleans up resources, such as the background processing task."""
         return None
 

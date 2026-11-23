@@ -1,10 +1,12 @@
+from pathlib import Path
+
 import pytest
 
 from arkitekt_fastapi.sql_lite.retriever import SQLLiteRetriever
 
 
 @pytest.mark.asyncio
-async def test_sqlite_retriever_initializes_schema(tmp_path) -> None:
+async def test_sqlite_retriever_initializes_schema(tmp_path: Path) -> None:
     db_path = tmp_path / "state.db"
     retriever = SQLLiteRetriever(db_path=str(db_path))
 

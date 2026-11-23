@@ -61,7 +61,7 @@ def wrap_legacy_get_user_from_request(
     payload the callable was never written to accept.
     """
 
-    def _expand(source: UserSource) -> Any:
+    def _expand(source: UserSource) -> object:
         if isinstance(source, WebSocketSubscriptionInit):
             return default_expand_user_from_request(source)
         return get_user_from_request(source)

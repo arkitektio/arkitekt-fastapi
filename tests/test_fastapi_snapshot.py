@@ -6,6 +6,8 @@ running server, and a declaration that does not validate fails at startup
 rather than at the first assignment.
 """
 
+from typing import TypeVar
+
 import pytest
 from arkitekt_spec.declare.app import AppRegistry
 from arkitekt_spec.declare.errors import RegistryFrozenError
@@ -15,6 +17,8 @@ from fastapi.testclient import TestClient
 
 from arkitekt_fastapi.routes import configure_fastapi
 from arkitekt_fastapi.testing import AsyncAgentTestClient
+
+_T = TypeVar("_T")
 
 
 @pytest.mark.asyncio
@@ -94,7 +98,7 @@ def test_without_a_lifespan_the_caller_owns_the_agent(tmp_path) -> None:  # noqa
         services: dict[str, object] = {}
         clients: dict[str, object] = {}
 
-        def get(self, key: type) -> object | None:
+        def get(self, key: type[_T], /) -> _T | None:
             return None
 
     bound = Bound()

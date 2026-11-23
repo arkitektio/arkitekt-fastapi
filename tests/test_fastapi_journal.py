@@ -205,7 +205,7 @@ def test_one_order_for_tasks_and_state_and_replay_at_any_position(served) -> Non
         assert [f.get("seq") for f in legacy_frames] == [
             f.get("seq") for f in frames[1:]
         ]
-        for plain, stamped in zip(legacy_frames, frames[1:]):
+        for plain, stamped in zip(legacy_frames, frames[1:], strict=True):
             assert {
                 k: v
                 for k, v in stamped.items()

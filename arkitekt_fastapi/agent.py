@@ -24,7 +24,7 @@ from types import TracebackType
 from typing import (
     Any,
     ClassVar,
-    Self,
+    TypeVar,
 )
 
 from arkitekt_runtime import messages
@@ -272,6 +272,9 @@ class FastAPIConnectionManager:
     def connection_count(self) -> int:
         """Return the number of active connections."""
         return len(self._active_connections)
+
+
+_FastApiTransportT = TypeVar("_FastApiTransportT", bound="FastApiTransport")
 
 
 class FastApiTransport(AgentTransport):
@@ -549,7 +552,7 @@ class FastApiTransport(AgentTransport):
             logger.info(f"Journal subscriber gone: {e}")
             self.remove_journal_subscriber(subscriber)
 
-    async def __aenter__(self) -> Self:
+    async def __aenter__(self: _FastApiTransportT) -> _FastApiTransportT:
         """Enter the context manager."""
         return self
 
@@ -613,7 +616,7 @@ class FastApiAgent(BaseAgent):
     # frames themselves stay exactly what every other client gets.
     stamps_frames: ClassVar[bool] = False
 
-    def model_post_init(self, __context: Any) -> None:
+    def model_post_init(self, __context: object) -> None:
         """Wire task routing so websocket subscriptions use action keys."""
         super().model_post_init(__context)
         # The journal is persisted with the state history, when the sink keeps one,
@@ -1017,7 +1020,7 @@ class FastApiAgent(BaseAgent):
         poll_interval = max(self.sink_catch_up_poll_interval, 0.0)
 
         async def _wait() -> None:
-            while not await self.sink.is_cought_up_to(self.global_revision):
+            while not await self.sink.is_cought_up_to(self.global_revision):  # noqa: ASYNC110 -- a sink has nothing to await: it is polled at the configured interval
                 await asyncio.sleep(poll_interval)
 
         if self.sink_catch_up_timeout is None:
@@ -1041,7 +1044,7 @@ class FastApiAgent(BaseAgent):
         """
         self._connected_event.set()
 
-    async def astart(self, app_context: Any = None) -> None:
+    async def astart(self, app_context: object = None) -> None:
         """Start the agent and initialize the sink and retriever."""
         await self.sink.ainitialize()
         await self.retriever.ainitialize()

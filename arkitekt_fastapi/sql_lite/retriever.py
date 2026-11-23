@@ -38,7 +38,7 @@ def epoch_ms_to_dt(ms: int) -> datetime:
 # 3. The Unified Store Class
 # ==========================================
 class SQLLiteRetriever:
-    def __init__(self, db_path: str = "ff.db"):
+    def __init__(self, db_path: str = "ff.db") -> None:
         self.db_path = db_path
         self.current_session_id: str | None = None
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
+
 from arkitekt_spec.actions import StateImplementationInput
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import JSONResponse
@@ -395,7 +397,9 @@ def _add_per_state_routes(
     ``register_router_custom_schemas``.
     """
 
-    def _build_current_state_endpoint(interface: str):
+    def _build_current_state_endpoint(
+        interface: str,
+    ) -> Callable[[], Awaitable[JSONResponse]]:
         async def current_state() -> JSONResponse:
             if interface not in agent.states:
                 return JSONResponse(

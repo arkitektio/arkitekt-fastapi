@@ -1,3 +1,4 @@
+from arkitekt_runtime import messages
 from arkitekt_spec.actions import (
     ImplementationInput,
     PortKind,
@@ -152,7 +153,7 @@ def test_implementation_route_reuses_fastapi_assign_builder() -> None:
 
     captured = []
 
-    async def capture_submit(message):
+    async def capture_submit(message: messages.Assign) -> str:
         captured.append(message)
         return message.task
 

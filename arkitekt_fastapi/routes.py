@@ -6,9 +6,9 @@ import asyncio
 import contextlib
 import logging
 from collections.abc import AsyncIterator, Callable
-from typing import Any
 
 from arkitekt_spec.actions import StateImplementationInput
+from arkitekt_spec.declare.agents.types import BoundApp
 from arkitekt_spec.declare.app import AppRegistry
 from fastapi import APIRouter, FastAPI, Request
 
@@ -58,7 +58,7 @@ def _log_provide_task_failure(task: asyncio.Task[None]) -> None:
 
 def create_lifespan(
     agent: FastApiAgent,
-    app_context: Any | None = None,
+    app_context: object = None,
     on_startup: Callable[[FastAPI], None] | None = None,
 ) -> Callable[[FastAPI], contextlib.AbstractAsyncContextManager[None]]:
     """Create a FastAPI lifespan manager for a configured agent.
@@ -264,8 +264,8 @@ def configure_fastapi(
     locks_path: str = "/locks",
     assets_path: str = "/assets",
     db_file: str = "agent_data.db",
-    app_context: Any | None = None,
-    bound_app: Any | None = None,
+    app_context: object = None,
+    bound_app: BoundApp | None = None,
     lifespan: bool = True,
 ) -> FastApiAgent:
     """Configure a FastAPI app with a refactored set of agent route groups.

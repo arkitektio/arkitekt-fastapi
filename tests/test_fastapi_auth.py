@@ -9,6 +9,7 @@ from the init payload it already sends after connecting.
 from typing import Any
 
 import pytest
+from arkitekt_runtime import messages
 from arkitekt_spec.declare.app import AppRegistry
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
@@ -142,7 +143,7 @@ def _implementation_app(**kwargs: Any) -> tuple[FastAPI, list[Any]]:
     agent = FastApiAgent(app_registry=AppRegistry())
     submitted: list[Any] = []
 
-    async def capture_submit(message: Any) -> str:
+    async def capture_submit(message: messages.Assign) -> str:
         submitted.append(message)
         return message.task
 

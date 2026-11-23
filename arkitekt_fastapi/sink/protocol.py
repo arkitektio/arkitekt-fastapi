@@ -24,11 +24,11 @@ class StateChange:
 @runtime_checkable
 class StateSink(Protocol):
     # --- INITIALIZATION & SESSION MANAGEMENT ---
-    async def ainitialize(self):
+    async def ainitialize(self) -> None:
         """Should be called once to set up the sink (e.g., create tables, indexes)."""
         ...
 
-    async def ateardown(self):
+    async def ateardown(self) -> None:
         """Cleans up resources, such as database connections."""
         ...
 
@@ -39,11 +39,11 @@ class StateSink(Protocol):
         ...
 
     # --- WRITE METHODS ---
-    async def adump_snapshot(self, snapshot: messages.StateSnapshot):
+    async def adump_snapshot(self, snapshot: messages.StateSnapshot) -> None:
         """Store a full snapshot of all states at a given revision."""
         ...
 
-    async def awrite_update(self, change: StateChange):
+    async def awrite_update(self, change: StateChange) -> None:
         """Write one update of a state to the store."""
         ...
 

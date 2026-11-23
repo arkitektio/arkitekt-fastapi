@@ -9,14 +9,15 @@ import contextlib
 import json
 import threading
 import time
-from collections.abc import Callable, Generator
+from collections.abc import AsyncIterator, Callable, Generator
 from dataclasses import dataclass
+from types import TracebackType
 from typing import Any
 
 from arkitekt_spec.declare.app import AppRegistry
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from httpx import ASGITransport, AsyncClient
+from httpx import ASGITransport, AsyncClient, Response
 from starlette.testclient import WebSocketTestSession
 
 from .agent import FastApiAgent
@@ -284,7 +285,7 @@ class AgentTestClient(_EventAccessors):
         self,
         exc_type: type | None,
         exc_val: BaseException | None,
-        exc_tb: Any | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         """Exit the context manager, cleaning up connections."""
         # Close WebSocket if open
@@ -328,7 +329,7 @@ class AgentTestClient(_EventAccessors):
         json: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
         **kwargs: Any,
-    ) -> Any:
+    ) -> Response:
         """Make a POST request to the app.
 
         If `as_user` is set, the `x-session-user` header will be included.
@@ -351,7 +352,7 @@ class AgentTestClient(_EventAccessors):
         path: str,
         headers: dict[str, str] | None = None,
         **kwargs: Any,
-    ) -> Any:
+    ) -> Response:
         """Make a GET request to the app.
 
         If `as_user` is set, the `x-session-user` header will be included.
@@ -625,7 +626,7 @@ class AsyncAgentTestClient(_EventAccessors):
         self,
         exc_type: type | None,
         exc_val: BaseException | None,
-        exc_tb: Any | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         """Exit the async context manager."""
         # Stop WebSocket listener
@@ -704,7 +705,7 @@ class AsyncAgentTestClient(_EventAccessors):
         json: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
         **kwargs: Any,
-    ) -> Any:
+    ) -> Response:
         """Make an async POST request to the app.
 
         Args:
@@ -727,7 +728,7 @@ class AsyncAgentTestClient(_EventAccessors):
         path: str,
         headers: dict[str, str] | None = None,
         **kwargs: Any,
-    ) -> Any:
+    ) -> Response:
         """Make an async GET request to the app.
 
         Args:
@@ -912,7 +913,7 @@ def create_test_lifespan(
     """
 
     @contextlib.asynccontextmanager
-    async def lifespan(app: FastAPI):
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.agent = agent
         await agent.transport.aconnect()
         try:

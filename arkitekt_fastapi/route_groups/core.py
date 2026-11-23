@@ -43,7 +43,7 @@ def build_core_router(
     """
     router = APIRouter(tags=["Agent"])
 
-    def resolve_http_user(request: Request) -> Any:
+    def resolve_http_user(request: Request) -> object:
         """Expand the user for an HTTP route, answering 401 on rejection."""
         if expand_user_from_request is None:
             return get_user_from_request(request)
